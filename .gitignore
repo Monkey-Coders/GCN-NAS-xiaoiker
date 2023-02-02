@@ -1,0 +1,8 @@
+data
+*.out
+__pycache__
+*.zip
+
+runs/
+work_dir/
+hohup.out
