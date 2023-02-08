@@ -534,7 +534,7 @@ class Processor():
         
         es_params = []
         old_es_params = []
-        pop_size = 5
+        pop_size = 30
         scores = [0.]*pop_size
     
         weights = torch.ones(n_layers, n_ops)*0.125
