@@ -318,6 +318,8 @@ class sepCEM:
         inds = self.mu + epsilon * np.sqrt(self.cov)
         if self.elitism:
             inds[-1] = self.elite
+            
+        self.print_log('inds: ', inds)
 
         return inds
 
@@ -385,6 +387,14 @@ class sepCEMA:
     """
     Cross-entropy methods.
     """
+    def print_log(self, str, print_time=True):
+        if print_time:
+            localtime = time.asctime(time.localtime(time.time()))
+            str = "[ " + localtime + ' ] ' + str
+        print(str)
+        if self.arg.print_log:
+            with open('{}/log.txt'.format(self.arg.work_dir), 'a') as f:
+                print(str, file=f)
 
     def __init__(self, num_params,
                  mu_init=None,

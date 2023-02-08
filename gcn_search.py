@@ -182,11 +182,11 @@ class Processor():
             if not arg.train_feeder_args['debug']:
                 if os.path.isdir(arg.model_saved_name):
                     print('log_dir: ', arg.model_saved_name, 'already exist')
-                    answer = input('delete it? y/n:')
+                    answer = 'y'#input('delete it? y/n:')
                     if answer == 'y':
                         shutil.rmtree(arg.model_saved_name)
                         print('Dir removed: ', arg.model_saved_name)
-                        input('Refresh the website of tensorboard by pressing any keys')
+                        # input('Refresh the website of tensorboard by pressing any keys')
                     else:
                         print('Dir not removed: ', arg.model_saved_name)
                 self.train_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'train'), 'train')
@@ -224,14 +224,14 @@ class Processor():
         self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
-        print(Model)
+        # print(Model)
         
         self.model = Model(**self.arg.model_args).cuda(output_device)
         #self.Archi = Architect(self.model)
         
         #for name, param in self.model.named_parameters():
             #print(name)
-        print(self.model)
+        # print(self.model)
         self.loss = nn.CrossEntropyLoss().cuda(output_device)# Criterion is here 
 
         if self.arg.weights:
@@ -274,14 +274,14 @@ class Processor():
     def load_optimizer(self):
         if self.arg.optimizer == 'SGD':
             self.optimizer = optim.SGD(
-                list(self.model.parameters())[1:],
+                list(self.model.module.parameters())[1:],
                 lr=self.arg.base_lr,
                 momentum=0.9,
                 nesterov=self.arg.nesterov,
                 weight_decay=self.arg.weight_decay)
         elif self.arg.optimizer == 'Adam':
             self.optimizer = optim.Adam(
-                list(self.model.parameters())[1:],
+                list(self.model.module.parameters())[1:],
                 lr=self.arg.base_lr,
                 weight_decay=self.arg.weight_decay)
         else:
@@ -349,7 +349,7 @@ class Processor():
             weights = torch.from_numpy(es_param).float().cuda()
 
         weights = F.softmax(weights, dim=-1)
-        self.model.train()
+        self.model.module.train()
         
         self.print_log('Training epoch: {}'.format(epoch + 1))
         
@@ -365,13 +365,13 @@ class Processor():
         if self.arg.only_train_part:
             if epoch > self.arg.only_train_epoch:
                 print('only train part, require grad')
-                for key, value in self.model.named_parameters():
+                for key, value in self.model.module.named_parameters():
                     if 'PA' in key:
                         value.requires_grad = True
                         # print(key + '-require grad')
             else:
                 print('only train part, do not require grad')
-                for key, value in self.model.named_parameters():
+                for key, value in self.model.module.named_parameters():
                     if 'PA' in key:
                         value.requires_grad = False
                         # print(key + '-not require grad')
@@ -383,7 +383,7 @@ class Processor():
             timer['dataloader'] += self.split_time()
 
             # forward
-            output = self.model(data, weights)
+            output = self.model.module(data, weights)
             # if batch_idx == 0 and epoch == 0:
             #     self.train_writer.add_graph(self.model, output)
             if isinstance(output, tuple):
@@ -430,7 +430,7 @@ class Processor():
                 **proportion))
 
         if save_model:
-            state_dict = self.model.state_dict()
+            state_dict = self.model.module.state_dict()
             weights = OrderedDict([[k.split('module.')[-1],
                                     v.cpu()] for k, v in state_dict.items()])
 
@@ -438,14 +438,16 @@ class Processor():
         
         # Update the distribution afternon initial the networks.
         if epoch > 10:
-            scores = np.zeros(50)
-            for j in range(50):
+            scores = np.zeros(pop_size)
+            wf = self.arg.model_saved_name + '_wrong.txt'
+            rf = self.arg.model_saved_name + '_right.txt'
+            for j in range(pop_size):
                 es_param = es_params[j]
                 es_param = es_param.reshape(n_layers,-1)
                 weights = torch.from_numpy(es_param).float().cuda()
                 weights = F.softmax(weights, dim=-1)
         
-                scores[j] = self.eval(epoch, weights, save_score=self.arg.save_score,loader_name=['test'])
+                scores[j] = self.eval(epoch, weights, save_score=self.arg.save_score,loader_name=['test'], wrong_file=wf, result_file=rf)
                 self.print_log('Current Archi: {}'.format(weights))
                 self.print_log('Its Performance: {}'.format(scores[j]))
 
@@ -458,7 +460,7 @@ class Processor():
             f_w = open(wrong_file, 'w')
         if result_file is not None:
             f_r = open(result_file, 'w')
-        self.model.eval()
+        self.model.module.eval()
         self.print_log('Eval epoch: {}'.format(epoch + 1))
         for ln in loader_name:
             loss_value = []
@@ -477,7 +479,7 @@ class Processor():
                     label.long().cuda(self.output_device),
                     requires_grad=False,
                     volatile=True)
-                output = self.model(data, weights)
+                output = self.model.module(data, weights)
                 if isinstance(output, tuple):
                     output, l1 = output
                     l1 = l1.mean()
@@ -526,14 +528,13 @@ class Processor():
 
     def start(self):
         # CEM
-
-        n_layers = len(self.model.layers)
+        n_layers = len(self.model.module.layers)
         n_ops = 8
         param_size = int(n_layers*n_ops)
         
         es_params = []
         old_es_params = []
-        pop_size = 50
+        pop_size = 5
         scores = [0.]*pop_size
     
         weights = torch.ones(n_layers, n_ops)*0.125
@@ -552,7 +553,6 @@ class Processor():
                     break
                 save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
                         epoch + 1 == self.arg.num_epoch)
-
                 self.train(epoch, sampler, es, n_layers, n_ops, pop_size, old_es_params, save_model=save_model)
                 
 #                self.eval(

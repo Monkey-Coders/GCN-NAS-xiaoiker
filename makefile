@@ -1,32 +1,17 @@
-search:
-	python gcn_search.py
+r:
+	chmod u+x job.slurm && sbatch job.slurm
 
-create:
-	conda env create -f environment.yml
+q:
+	squeue -u zuimran
 
-env:
-	echo "conda activate zaim"
+s:
+	scancel $(id)
 
-exit:
-	echo "conda deactivate"
+sa:
+	scancel -u zuimran
 
-tens:
-	tensorboard --logdir Run\ 2/runs
-
-refresh:
-	cd ../../anaconda3/ && rm -r envs/
+t:
+	tail -f -n 1 GCN-NAS.out 
 
 gpu:
 	nvidia-smi
-
-pip:
-	pip install tqdm tensorboard tensorboardX pyyaml==5.3 scipy torchprofile
-
-conda:
-	conda install pytorch torchvision torchaudio pytorch-cuda=11.6 -c pytorch -c nvidia
-
-hop:
-	chmod +x ./gcn_search.py && nohup ./gcn_search.py &
-
-find:
-	ps ax | grep ./gcn_search.py

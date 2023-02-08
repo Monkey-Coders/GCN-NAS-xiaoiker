@@ -1,5 +1,5 @@
-work_dir: ./work_dir/ntu/xview/agcn_joint_Srch_CTN
-model_saved_name: ./runs/ntu_cv_agcn_joint_Srch_CTN
+work_dir: ./Run5/work_dir/ntu/xview/agcn_joint_Srch_CTN
+model_saved_name: ./Run5/runs/ntu_cv_agcn_joint_Srch_CTN
 # feeder
 feeder: feeders.feeder.Feeder
 train_feeder_args:
@@ -39,8 +39,9 @@ base_lr: 0.1
 step: [30, 45, 60]
 
 # training
-device: [0]
-batch_size: 20
+device: [0, 1]
+start_epoch: 0
+batch_size: 40
 test_batch_size: 20
-num_epoch: 70
+num_epoch: 30
 nesterov: True

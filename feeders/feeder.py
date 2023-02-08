@@ -51,7 +51,7 @@ class Feeder(Dataset):
 
         # load data
         if self.use_mmap:
-            self.data = np.load(self.data_path, mmap_mode='r')
+            self.data = np.load(self.data_path, mmap_mode='r+')
         else:
             self.data = np.load(self.data_path)
         if self.debug:
