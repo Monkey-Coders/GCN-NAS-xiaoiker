@@ -1,5 +1,5 @@
-work_dir: ./Run5/work_dir/ntu/xview/agcn_joint_Srch_CTN
-model_saved_name: ./Run5/runs/ntu_cv_agcn_joint_Srch_CTN
+work_dir: ./run/work_dir/ntu/xview/agcn_joint_Srch_CTN
+model_saved_name: ./run/runs/ntu_cv_agcn_joint_Srch_CTN
 # feeder
 feeder: feeders.feeder.Feeder
 train_feeder_args:

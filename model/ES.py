@@ -319,7 +319,7 @@ class sepCEM:
         if self.elitism:
             inds[-1] = self.elite
             
-        self.print_log('inds: ', inds)
+        # self.print_log('inds: ', inds)
 
         return inds
 

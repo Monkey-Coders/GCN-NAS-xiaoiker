@@ -6,3 +6,5 @@ __pycache__
 runs/
 work_dir/
 hohup.out
+
+wandb/
