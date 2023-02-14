@@ -22,7 +22,7 @@ import inspect
 import torch.backends.cudnn as cudnn
 import wandb
 
-wandb.init(project="test-project", entity="gcn-nas")
+wandb.init(project="zaim", entity="gcn-nas")
 
 
 #from model.architect import Architect
@@ -341,10 +341,27 @@ class Processor():
         self.record_time()
         return split_time
 
-    def train(self, epoch, sampler, es, n_layers, n_ops, pop_size = 50, old_es_params=[], save_model=False):
+    def print_debug(self, text):
+        localtime = time.asctime(time.localtime(time.time()))
+        text = "[ " + localtime + ' ] ' + text
+        with open(f'{self.arg.work_dir}/debug.txt', 'a') as f:
+            print(text, file=f)
+    def train(self, epoch, sampler, es, n_layers, n_ops, pop_size = 30, old_es_params=[], save_model=False):
         
         # Sample a group of smaples
         es_params, n_reused, idx_reused = sampler.ask(pop_size, old_es_params)
+        self.print_debug(f"#############################################")
+        self.print_debug(f"#############################################")
+        self.print_debug(f"#############################################")
+        self.print_debug(f"Epoch: {epoch}")
+        self.print_debug(f"n_layers: {n_layers}")
+        self.print_debug(f"n_ops: {n_ops}")
+        self.print_debug(f"pop_size: {pop_size}")
+        self.print_debug(f"old_es_params: {old_es_params}")
+        self.print_debug(f"save_model: {save_model}")
+        self.print_debug(f"es_params: {es_params}")
+        self.print_debug(f"n_reused: {n_reused}")
+        self.print_debug(f"idx_reused: {idx_reused}")
         print('es shape {}'.format(es_params.shape))
  
         weights = torch.ones(n_layers,n_ops)*0.125
@@ -355,6 +372,8 @@ class Processor():
             weights = torch.from_numpy(es_param).float().cuda()
 
         weights = F.softmax(weights, dim=-1)
+        
+        self.print_debug(f"weights: {weights}")
         self.model.module.train()
         
         self.print_log('Training epoch: {}'.format(epoch + 1))
@@ -439,6 +458,9 @@ class Processor():
             '\tTime consumption: [Data]{dataloader}, [Network]{model}'.format(
                 **proportion))
 
+        self.print_debug(f"timer: {timer}")
+        self.print_debug(f"proportion: {proportion}")
+        self.print_debug(f"mean_loss_value: {np.mean(loss_value)}")
         if save_model:
             state_dict = self.model.module.state_dict()
             weights = OrderedDict([[k.split('module.')[-1],
@@ -457,10 +479,12 @@ class Processor():
                 weights = torch.from_numpy(es_param).float().cuda()
                 weights = F.softmax(weights, dim=-1)
         
-                scores[j] = self.eval(epoch, weights, save_score=self.arg.save_score,loader_name=['test'], wrong_file=wf, result_file=rf)
+                scores[j] = self.eval(epoch, weights, save_score=True,loader_name=['test'], wrong_file=wf, result_file=rf)
                 self.print_log('Current Archi: {}'.format(weights))
                 self.print_log('Its Performance: {}'.format(scores[j]))
 
+            self.print_debug(f"es_params: {es_params}")
+            self.print_debug(f"scores: {scores}")
             es.tell(es_params, scores)
             old_es_params = deepcopy(es_params)
 
@@ -536,6 +560,10 @@ class Processor():
                 with open('{}/epoch{}_{}_score.pkl'.format(
                         self.arg.work_dir, epoch + 1, ln), 'wb') as f:
                     pickle.dump(score_dict, f)
+                    
+            with open(f'{self.arg.work_dir}/architextures.txt', 'a') as f:
+                s = f"{epoch}|{accuracy}|{loss}|{weights}\n"
+                f.write(s)
             return accuracy
 
     def start(self):
@@ -565,8 +593,11 @@ class Processor():
                     break
                 save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
                         epoch + 1 == self.arg.num_epoch)
+                start = time.time()
                 self.train(epoch, sampler, es, n_layers, n_ops, pop_size, old_es_params, save_model=save_model)
-                
+                end = time.time()
+                with open(f'{self.arg.work_dir}/train_time.txt', 'a') as f:
+                    f.write(f"{epoch}|{end-start}\n")
 #                self.eval(
 #                    epoch,
 #                    save_score=self.arg.save_score,

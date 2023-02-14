@@ -319,8 +319,6 @@ class sepCEM:
         if self.elitism:
             inds[-1] = self.elite
             
-        # self.print_log('inds: ', inds)
-
         return inds
 
     def tell(self, solutions, scores):
@@ -344,7 +342,6 @@ class sepCEM:
 
         self.elite = solutions[idx_sorted[0]]
         self.elite_score = scores[idx_sorted[0]]
-        print(self.cov)
 
     def get_distrib_params(self):
         """
