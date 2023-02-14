@@ -5,7 +5,12 @@ from torch.autograd import Variable
 import numpy as np
 import math
 
-
+# Write docstring for this function
+'''
+    This function is used to get the chebshev approximation of the adjacency matrix
+    A: Adjacency matrix
+    indices: indices of the chebshev approximation to be used
+'''
 def get_chebshev_approximation(A, indices):
     soft = nn.Softmax(-2)
     A_ch4s = soft((8*torch.pow(A, 4)- 8*torch.pow(A, 2)+torch.eye(A.size(-1)))/A.size(-1))
@@ -60,23 +65,52 @@ class unit_tcn(nn.Module):
         return x
 
 
-class unit_gcn(nn.Module):
-    def __init__(self, in_channels, out_channels, A, coff_embedding=4, num_subset=3):
-        super(unit_gcn, self).__init__()
+class unit_gtcn(nn.Module):
+    def __init__(self, in_channels, out_channels, A, weights, coff_embedding=4, num_subset=3):
+        super(unit_gtcn, self).__init__()
         inter_channels = out_channels // coff_embedding
         self.inter_c = inter_channels
-        self.PA = nn.Parameter(torch.from_numpy(A.astype(np.float32)))
+        self.PA = nn.Parameter(torch.from_numpy(A.astype(np.float32)))# I think this the Bk in the paper.
         nn.init.constant(self.PA, 1e-6)
         self.A = Variable(torch.from_numpy(A.astype(np.float32)), requires_grad=False)
-        self.num_subset = num_subset
+        self.num_subset = num_subset # How many layers in each sub-Network. 
+        self.weights = weights
 
-        self.conv_a = nn.ModuleList()
-        self.conv_b = nn.ModuleList()
+        self.use_spatial = weights[5] > 0.1
+        self.use_temporal = weights[6] > 0.1
+        self.use_spatial_temporal = weights[7] > 0.1
+
+        if self.use_spatial:
+            self.conv_a = nn.ModuleList()
+            self.conv_b = nn.ModuleList()
         self.conv_d = nn.ModuleList()
-        for i in range(self.num_subset):
-            self.conv_a.append(nn.Conv2d(in_channels, inter_channels, 1))
-            self.conv_b.append(nn.Conv2d(in_channels, inter_channels, 1))
+        
+        if self.use_temporal:
+            self.conv_T1 = nn.ModuleList()
+            self.conv_T2 = nn.ModuleList()
+
+        if self.use_spatial_temporal:
+            self.conv_ST11 = nn.ModuleList()
+            self.conv_ST12 = nn.ModuleList()
+        
+        for i in range(num_subset):
+            if self.use_spatial:
+                self.conv_a.append(nn.Conv2d(in_channels, inter_channels, 1))# There are 3 sub-Networks in the Unit, Here means all the Kernel_size=1
+                self.conv_b.append(nn.Conv2d(in_channels, inter_channels, 1))
+            
+            #This is used even if we are not using spatial for some reason
+            # Will have nothing to say because we are checking if use_spatial is true later
             self.conv_d.append(nn.Conv2d(in_channels, out_channels, 1))
+            
+            if self.use_temporal:
+                self.conv_T1.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))# To build graph from temporal infomation.
+                self.conv_T2.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
+            
+            if self.use_spatial_temporal:
+                self.conv_ST11.append(nn.Conv2d(in_channels, inter_channels, 1))# To build graph from temporal infomation.
+                self.conv_ST11.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
+                self.conv_ST12.append(nn.Conv2d(in_channels, inter_channels, 1))
+                self.conv_ST12.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
 
         if in_channels != out_channels:
             self.down = nn.Sequential(
@@ -85,7 +119,7 @@ class unit_gcn(nn.Module):
             )
         else:
             self.down = lambda x: x
-
+        
         self.bn = nn.BatchNorm2d(out_channels)
         self.soft = nn.Softmax(-2)
         self.relu = nn.ReLU()
@@ -101,276 +135,95 @@ class unit_gcn(nn.Module):
 
     def forward(self, x):
         N, C, T, V = x.size()
-        A = self.A.cuda(x.get_device())
-        A = A + self.PA
+        approximation_indices= [i for i, x in enumerate(self.weights[0:5]) if x > 0.1]
+        approximations = get_chebshev_approximations(self.A, approximation_indices)
+        approximations = [approximation.cuda(x.get_device()) for approximation in approximations]
+
+        A = sum(approximations) if len(approximations) >= 1 else self.PA
 
         y = None
+
         for i in range(self.num_subset):
-            A1 = self.conv_a[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)
-            A2 = self.conv_b[i](x).view(N, self.inter_c * T, V)
-            A1 = self.soft(torch.matmul(A1, A2) / A1.size(-1))  # N V V
-            A1 = A1 + A[i]
-            A2 = x.view(N, C * T, V)
-            z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))
-            y = z + y if y is not None else z
+            # Note, if we are not using spatial we set the value to 0 
+            A1 = self.conv_a[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T) if self.use_spatial else 0
+            A2 = self.conv_b[i](x).view(N, self.inter_c * T, V) if self.use_spatial else 0
+            A1 = self.soft(torch.matmul(A1, A2) / A1.size(-1))  if self.use_spatial else 0
 
-        y = self.bn(y)
-        y += self.down(x)
-        return self.relu(y)
+            A_T1= self.conv_T1[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T) if self.use_temporal else 0
+            A_T2 = self.conv_T2[i](x).view(N, self.inter_c * T, V) if self.use_temporal else 0
+            A_T1 = self.soft(torch.matmul(A_T1, A_T2) / A_T1.size(-1)) if self.use_temporal else 0
 
+            A_ST11= self.conv_ST11[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T) if self.use_spatial_temporal else 0
+            A_ST12 = self.conv_ST12[i](x).view(N, self.inter_c * T, V) if self.use_spatial_temporal else 0
+            A_ST11 = self.soft(torch.matmul(A_ST11, A_ST12) / A_ST11.size(-1)) if self.use_spatial_temporal else 0
 
-        
-class unit_gtcn(nn.Module):
-    def __init__(self, in_channels, out_channels, A, coff_embedding=4, num_subset=3):
-        super(unit_gtcn, self).__init__()
-        inter_channels = out_channels // coff_embedding
-        self.inter_c = inter_channels
-        self.PA = nn.Parameter(torch.from_numpy(A.astype(np.float32)))# I think this the Bk in the paper.
-        nn.init.constant(self.PA, 1e-6)
-        self.A = Variable(torch.from_numpy(A.astype(np.float32)), requires_grad=False)
-        self.num_subset = num_subset # How many layers in each sub-Network. 
+            A1 = A[i] + A1 + A_T1 + A_ST11
 
-        self.conv_a = nn.ModuleList()
-        self.conv_b = nn.ModuleList()
-        self.conv_d = nn.ModuleList()
-        self.conv_T1 = nn.ModuleList()
-        self.conv_T2 = nn.ModuleList()
-        
-        for i in range(self.num_subset):
-            self.conv_a.append(nn.Conv2d(in_channels, inter_channels, 1))# There are 3 sub-Networks in the Unit, Here means all the Kernel_size=1
-            self.conv_b.append(nn.Conv2d(in_channels, inter_channels, 1))
-            self.conv_d.append(nn.Conv2d(in_channels, out_channels, 1))
-            
-            self.conv_T1.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))# To build graph from temporal infomation.
-            self.conv_T2.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
-
-        if in_channels != out_channels:
-            self.down = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, 1),
-                nn.BatchNorm2d(out_channels)
-            )
-        else:
-            self.down = lambda x: x
-
-        self.bn = nn.BatchNorm2d(out_channels)
-        self.soft = nn.Softmax(-2)
-        self.relu = nn.ReLU()
-
-        for m in self.modules():# return all the modules in the model
-            if isinstance(m, nn.Conv2d):
-                conv_init(m)
-            elif isinstance(m, nn.BatchNorm2d):
-                bn_init(m, 1)
-        bn_init(self.bn, 1e-6)
-        for i in range(self.num_subset):
-            conv_branch_init(self.conv_d[i], self.num_subset)
-
-    def forward(self, x): 
-        N, C, T, V = x.size()
-        A = self.A.cuda(x.get_device())
-        A = A + self.PA # Is this A the adjecent Matrix? PA is Bk?
-
-        y = None
-        for i in range(self.num_subset):
-            A1 = self.conv_a[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)#: Conv out:N, C, T, V --> N , V, C, T --> N , V, C*T
-            A2 = self.conv_b[i](x).view(N, self.inter_c * T, V) #: Conv out: N, C, T, V -->  N , C*T, V
-            A1 = self.soft(torch.matmul(A1, A2) / A1.size(-1))  # N V V, and / A1.size(-1) means normalize?? # Note: A1 here is Ck in the Eq. 
-            
-            A_T1= self.conv_T1[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)#: Conv out:N, C, T, V --> N , V, C, T --> N , V, C*T
-            A_T2 = self.conv_T2[i](x).view(N, self.inter_c * T, V) 
-            A_T1 = self.soft(torch.matmul(A_T1, A_T2) / A_T1.size(-1))
-            
-            A1 = A[i] + A1 + A_T1 # Means Ak+Bk+Ck+Tk in Eq(3), in line 95: A = A + B
-            
             A2 = x.view(N, C * T, V)
             z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))# Means f_out in Eq(3)
             y = z + y if y is not None else z
-
+        
         y = self.bn(y)
-        y += self.down(x)
+        y+= self.down(x)
         return self.relu(y)
-
-
-class unit_gtcn_C(nn.Module):
-    def __init__(self, in_channels, out_channels, A,weights, coff_embedding=4, num_subset=3):
-        super(unit_gtcn_C, self).__init__()
-        inter_channels = out_channels // coff_embedding
-        self.inter_c = inter_channels
-        self.PA = nn.Parameter(torch.from_numpy(A.astype(np.float32)))# I think this the Bk in the paper.
-        nn.init.constant(self.PA, 1e-6)
-        self.A = Variable(torch.from_numpy(A.astype(np.float32)), requires_grad=False)
-        self.num_subset = num_subset # How many layers in each sub-Network. 
-        self.weights = weights
-
-        self.use_spatial = weights[5] > 0.1
-        self.use_temporal = weights[6] > 0.1
-        self.use_spatial_temporal = weights[7] > 0.1
-        # Define if we need spatial depending on the weight
-        if self.use_spatial:
-            self.conv_a = nn.ModuleList()
-            self.conv_b = nn.ModuleList()
-            self.conv_d = nn.ModuleList()
-        if self.use_temporal:
-            self.conv_T1 = nn.ModuleList()
-            self.conv_T2 = nn.ModuleList()
-        
-        if self.use_spatial_temporal:
-            self.conv_ST11 = nn.ModuleList()
-            self.conv_ST12 = nn.ModuleList()
-        #self.conv_ST21 = nn.ModuleList()
-        #self.conv_ST22 = nn.ModuleList()
-        
-        for i in range(self.num_subset):
-            if self.use_spatial:
-                self.conv_a.append(nn.Conv2d(in_channels, inter_channels, 1))# There are 3 sub-Networks in the Unit, Here means all the Kernel_size=1
-                self.conv_b.append(nn.Conv2d(in_channels, inter_channels, 1))
-                self.conv_d.append(nn.Conv2d(in_channels, out_channels, 1))
-            
-            if self.use_temporal:
-                self.conv_T1.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))# To build graph from temporal infomation.
-                self.conv_T2.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
-            
-            if self.use_spatial_temporal:
-                self.conv_ST11.append(nn.Conv2d(in_channels, inter_channels, 1))# To build graph from temporal infomation.
-                self.conv_ST11.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
-                self.conv_ST12.append(nn.Conv2d(in_channels, inter_channels, 1))
-                self.conv_ST12.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
-            
-
-        if in_channels != out_channels:
-            self.down = nn.Sequential(
-                nn.Conv2d(in_channels, out_channels, 1),
-                nn.BatchNorm2d(out_channels)
-            )
-        else:
-            self.down = lambda x: x
-
-        self.bn = nn.BatchNorm2d(out_channels)
-        self.soft = nn.Softmax(-2)
-        self.relu = nn.ReLU()
-        
-       
-        approximation_indices= [i for i, x in enumerate(weights[0:5]) if x > 0.1]
-        self.approximations = get_chebshev_approximation(self.A, approximation_indices)
-
-        
-        for m in self.modules():# return all the modules in the model
-            if isinstance(m, nn.Conv2d):
-                conv_init(m)
-            elif isinstance(m, nn.BatchNorm2d):
-                bn_init(m, 1)
-        bn_init(self.bn, 1e-6)
-        for i in range(self.num_subset):
-            conv_branch_init(self.conv_d[i], self.num_subset)
-
-    def forward(self, x, weights):
-        N, C, T, V = x.size()
-        A = self.A.cuda(x.get_device())
-        
-        #Note not include the PA during searching
-        approximations_cuda = [approximation.cuda(x.get_device()) for approximation in self.approximations]
-        # TODO
-        # Verify that this works
-        A = sum([weight * approximation for weight, approximation in zip(weights, approximations_cuda)])
-        y = None
-
-        for i in range(self.num_subset):
-            operations = []
-            if self.use_spatial:
-                A1 = self.conv_a[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)#: Conv out:N, C, T, V --> N , V, C, T --> N , V, C*T
-                A2 = self.conv_b[i](x).view(N, self.inter_c * T, V) #: Conv out: N, C, T, V -->  N , C*T, V
-                A1 = self.soft(torch.matmul(A1, A2) / A1.size(-1))  # N V V, and / A1.size(-1) means normalize?? # Note: A1 here is Ck in the Eq. 
-                operations.append(A1)
-            if self.use_temporal:
-                A_T1= self.conv_T1[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)#: Conv out:N, C, T, V --> N , V, C, T --> N , V, C*T
-                A_T2 = self.conv_T2[i](x).view(N, self.inter_c * T, V) 
-                A_T1 = self.soft(torch.matmul(A_T1, A_T2) / A_T1.size(-1))
-                operations.append(A_T1)
-            if self.use_spatial_temporal:
-                A_ST11= self.conv_ST11[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)#: Conv out:N, C, T, V --> N , V, C, T --> N , V, C*T
-                A_ST12 = self.conv_ST12[i](x).view(N, self.inter_c * T, V) 
-                A_ST11 = self.soft(torch.matmul(A_ST11, A_ST12) / A_ST11.size(-1))
-                operations.append(A_ST11)
-            #A_ST21= self.conv_ST21[i](x).permute(0, 3, 1, 2).contiguous().view(N, V, self.inter_c * T)#: Conv out:N, C, T, V --> N , V, C, T --> N , V, C*T
-            #A_ST22 = self.conv_ST22[i](x).view(N, self.inter_c * T, V) 
-            #A_ST21 = self.soft(torch.matmul(A_ST21, A_ST22) / A_ST21.size(-1))
-            
-            #A1 = A[i] + weights[5]*A1 + weights[6]*A_T1 + weights[7]*A_ST11 #+ weights[8]*A_ST21 # Means Ak+Bk+Ck+Tk in Eq(3), in line 95: A = A + B
-            A1 = A + sum([weight * operation for weight, operation in zip(weights[5:], operations)])
-            A2 = x.view(N, C * T, V)
-            z = self.conv_d[i](torch.matmul(A2, A1).view(N, C, T, V))# Means f_out in Eq(3)
-            y = z + y if y is not None else z
-
-        y = self.bn(y)
-        y += self.down(x)
-        return self.relu(y)         
 
 class TCN_GCN_unit(nn.Module):
-    def __init__(self, in_channels, out_channels, A, weights, stride=1, residual=True):
+    def __init__(self, in_channels, out_channels, A, weights, residual=True, stride=1):
         super(TCN_GCN_unit, self).__init__()
-        #self.gcn1 = unit_gcn(in_channels, out_channels, A)
-        # Need to find out what gcn1 is and what tcn1 is
-        self.gcn1 = unit_gtcn_C(in_channels, out_channels, A, weights)
-        self.tcn1 = unit_tcn(out_channels, out_channels, stride=stride)
-        #self.tcn1 = unit_tcn_G(out_channels, out_channels, stride=stride)
+        self.gtcn = unit_gtcn(in_channels, out_channels, A, weights)
+        self.tcn = unit_tcn(out_channels, out_channels, stride=stride)
+        
         self.relu = nn.ReLU()
-        self.weights = weights
         if not residual:
             self.residual = lambda x: 0
-
-        elif (in_channels == out_channels) and (stride == 1):
+        
+        elif in_channels == out_channels and stride == 1:
             self.residual = lambda x: x
-
         else:
             self.residual = unit_tcn(in_channels, out_channels, kernel_size=1, stride=stride)
-
-    def forward(self, x, weight):
-        x = self.tcn1(self.gcn1(x, weight)) + self.residual(x)
+        
+    def forward(self, x):
+        x = self.tcn(self.gcn(x)) + self.residual(x)
         return self.relu(x)
 
-
 class Model(nn.Module):
-    def __init__(self, weights = None, layers=None, num_class=60, num_point=25, num_person=2, graph=None, graph_args=dict(), in_channels=3, criterion=nn.CrossEntropyLoss()):
+    def __init__(self, num_class=60, num_point=25, num_person=2, graph=None, graph_args=dict(), in_channels=3, weights = None):
         super(Model, self).__init__()
 
-        if graph is None or weights is None or layers is None:
+        if graph is None or weights is None:
             raise ValueError()
         else:
             Graph = import_class(graph)
             self.graph = Graph(**graph_args)
 
         A = self.graph.A
-
-        #self.register_buffer('Weights_A', torch.ones(10,8)*0.125)
         self.data_bn = nn.BatchNorm1d(num_person * in_channels * num_point)
-        # Get the size of the weights
-        layers_size, function_modules_size = weights.shape
-        # We need to create an array of layers based on the layer attribute 
-        self.layers = []
-        self.l1 = TCN_GCN_unit(in_channels=3, out_channels=64, A=A, weights=weights[0], stride=1, residual=False)
-        for i , layer in enumerate(layers):
-            setattr(self,"l"+str(i+1), TCN_GCN_unit(in_channels=layer["in_channels"], out_channels=layer["out_channels"], A=A, weights=layer["weights"], stride=layer["stride"], residual=layer["residual"]))
-            self.layers.append(getattr(self,"l"+str(i+1)))
-        
+
+        self.l1 = TCN_GCN_unit(3, 64, A, residual=False, weights=weights[0])
+        self.l2 = TCN_GCN_unit(64, 64, A, weights=weights[1])
+        self.l3 = TCN_GCN_unit(64, 64, A, weights=weights[2])
+        self.l4 = TCN_GCN_unit(64, 64, A, weights=weights[3])
+        self.l5 = TCN_GCN_unit(64, 128, A, stride=2, weights=weights[4])
+        self.l6 = TCN_GCN_unit(128, 128, A, weights=weights[5])
+        self.l7 = TCN_GCN_unit(128, 128, A, weights=weights[6])
+        self.l8 = TCN_GCN_unit(128, 256, A, stride=2, weights=weights[7])
+        self.l9 = TCN_GCN_unit(256, 256, A, weights=weights[8])
+        self.l10 = TCN_GCN_unit(256, 256, A, weights=weights[9])
+        self.layers = [self.l1, self.l2, self.l3, self.l4, self.l5, self.l6, self.l7, self.l8, self.l9, self.l10]
 
         self.fc = nn.Linear(256, num_class)
         nn.init.normal(self.fc.weight, 0, math.sqrt(2. / num_class))
         bn_init(self.data_bn, 1)
-        
-        self._criterion = criterion
-        
-  
-    def forward(self, x, weights):
+
+    def forward(self, x):
         N, C, T, V, M = x.size()
 
         x = x.permute(0, 4, 3, 1, 2).contiguous().view(N, M * V * C, T)
         x = self.data_bn(x)
         x = x.view(N, M, V, C, T).permute(0, 1, 3, 4, 2).contiguous().view(N * M, C, T, V)
 
-     
-        
-        for i, layer in enumerate(self.layers):
-            x = layer(x, weights[i])
+        for layer in self.layers:
+            x = layer(x)
 
         # N*M,C,T,V
         c_new = x.size(1)
@@ -378,11 +231,3 @@ class Model(nn.Module):
         x = x.mean(3).mean(1)
 
         return self.fc(x)
-
-#    def _loss(self, x, target):
-#        logits = self(x)
-#        return self._criterion(logits, target)
-#        
-#    def arch_parameters(self):
-#        return self.archi_params # should be a iterable one
-
