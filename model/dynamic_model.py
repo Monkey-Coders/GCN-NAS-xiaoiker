@@ -5,12 +5,6 @@ from torch.autograd import Variable
 import numpy as np
 import math
 
-# Write docstring for this function
-'''
-    This function is used to get the chebshev approximation of the adjacency matrix
-    A: Adjacency matrix
-    indices: indices of the chebshev approximation to be used
-'''
 def get_chebshev_approximation(A, indices):
     soft = nn.Softmax(-2)
     A_ch4s = soft((8*torch.pow(A, 4)- 8*torch.pow(A, 2)+torch.eye(A.size(-1)))/A.size(-1))
