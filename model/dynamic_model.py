@@ -236,11 +236,6 @@ class unit_gtcn_C(nn.Module):
                 self.conv_ST12.append(nn.Conv2d(in_channels, inter_channels, 1))
                 self.conv_ST12.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
             
-            #self.conv_ST21.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))# To build graph from temporal infomation.
-            #self.conv_ST21.append(nn.Conv2d(in_channels, inter_channels, 1))
-            
-            #self.conv_ST22.append(nn.Conv2d(in_channels, inter_channels, (9,1), padding=(4, 0)))
-            #self.conv_ST22.append(nn.Conv2d(in_channels, inter_channels, 1))
 
         if in_channels != out_channels:
             self.down = nn.Sequential(
@@ -254,25 +249,10 @@ class unit_gtcn_C(nn.Module):
         self.soft = nn.Softmax(-2)
         self.relu = nn.ReLU()
         
-        #self.A_ch = self.soft(torch.pow(self.A, 4)/self.A.size(-1))# A_ch is for Chebyshev filter approximation with order 4
-        #self.A_ch4 = self.soft((8*torch.pow(self.A, 4)- 4*torch.pow(self.A, 2)-4*self.A +torch.eye(self.A.size(-1)))/self.A.size(-1))
-        #self.A_ch3 = self.soft((4*torch.pow(self.A, 2)-self.A - 2*torch.eye(self.A.size(-1)))/self.A.size(-1))
-        #self.A_ch2 = self.soft((2*self.A - torch.eye(self.A.size(-1)))/self.A.size(-1))
-        
-        # Create a variable called chebyshevs 
-        # Create a list of indices if the value of the element in weight is larger than 0.1
+       
         approximation_indices= [i for i, x in enumerate(weights[0:5]) if x > 0.1]
         self.approximations = get_chebshev_approximation(self.A, approximation_indices)
 
-        """ self.A_ch4s = self.soft((8*torch.pow(self.A, 4)- 8*torch.pow(self.A, 2)+torch.eye(self.A.size(-1)))/self.A.size(-1))
-        self.A_ch4 = (8*torch.pow(self.A, 4)- 8*torch.pow(self.A, 2) +torch.eye(self.A.size(-1)))
-        self.A_ch3 = (4*torch.pow(self.A, 3)-3*self.A)
-        self.A_ch2 = (2*torch.pow(self.A, 2) - torch.eye(self.A.size(-1))) """
-        
-        #self.A_ch4s = self.soft((8*torch.pow(self.A, 4)- 4*torch.pow(self.A, 2)-4*self.A +torch.eye(self.A.size(-1)))/self.A.size(-1))
-        #self.A_ch4 = (8*torch.pow(self.A, 4)- 4*torch.pow(self.A, 2)-4*self.A +torch.eye(self.A.size(-1)))
-        #self.A_ch3 = (4*torch.pow(self.A, 2)-self.A - 2*torch.eye(self.A.size(-1)))
-        #self.A_ch2 = (2*self.A - torch.eye(self.A.size(-1)))
         
         for m in self.modules():# return all the modules in the model
             if isinstance(m, nn.Conv2d):
@@ -287,14 +267,7 @@ class unit_gtcn_C(nn.Module):
         N, C, T, V = x.size()
         A = self.A.cuda(x.get_device())
         
-        """ A_ch4s = self.A_ch4s.cuda(x.get_device())
-        A_ch4 = self.A_ch4.cuda(x.get_device())
-        A_ch3 = self.A_ch3.cuda(x.get_device())
-        A_ch2 = self.A_ch2.cuda(x.get_device()) """
-        
-        
         #Note not include the PA during searching
-        #A = weights[0]*A + weights[1]*A_ch4s + weights[2]*A_ch4 + weights[3]*A_ch3+ weights[4]*A_ch2  # Is this A the adjecent Matrix? PA is Bk?
         approximations_cuda = [approximation.cuda(x.get_device()) for approximation in self.approximations]
         # TODO
         # Verify that this works
@@ -357,47 +330,35 @@ class TCN_GCN_unit(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, weights = None, num_class=60, num_point=25, num_person=2, graph=None, graph_args=dict(), in_channels=3, criterion=nn.CrossEntropyLoss()):
+    def __init__(self, weights = None, layers=None, num_class=60, num_point=25, num_person=2, graph=None, graph_args=dict(), in_channels=3, criterion=nn.CrossEntropyLoss()):
         super(Model, self).__init__()
 
-        if graph is None or weights is None:
+        if graph is None or weights is None or layers is None:
             raise ValueError()
         else:
             Graph = import_class(graph)
             self.graph = Graph(**graph_args)
 
         A = self.graph.A
+
         #self.register_buffer('Weights_A', torch.ones(10,8)*0.125)
         self.data_bn = nn.BatchNorm1d(num_person * in_channels * num_point)
-
-        self.l1 = TCN_GCN_unit(3, 64, A, weights=weights[0],residual=False)
-        self.l2 = TCN_GCN_unit(64, 64, A, weights=weights[1])
-        self.l3 = TCN_GCN_unit(64, 64, A, weights=weights[2])
-        self.l4 = TCN_GCN_unit(64, 64, A, weights=weights[3])
-        self.l5 = TCN_GCN_unit(64, 128, A, stride=2, weights=weights[4])
-        self.l6 = TCN_GCN_unit(128, 128, A, weights=weights[5])
-        self.l7 = TCN_GCN_unit(128, 128, A, weights=weights[6])
-        self.l8 = TCN_GCN_unit(128, 256, A, stride=2, weights=weights[7])
-        self.l9 = TCN_GCN_unit(256, 256, A, weights=weights[8])
-        self.l10 = TCN_GCN_unit(256, 256, A, weights=weights[9])
+        # Get the size of the weights
+        layers_size, function_modules_size = weights.shape
+        # We need to create an array of layers based on the layer attribute 
+        self.layers = []
+        self.l1 = TCN_GCN_unit(in_channels=3, out_channels=64, A=A, weights=weights[0], stride=1, residual=False)
+        for i , layer in enumerate(layers):
+            setattr(self,"l"+str(i+1), TCN_GCN_unit(in_channels=layer["in_channels"], out_channels=layer["out_channels"], A=A, weights=layer["weights"], stride=layer["stride"], residual=layer["residual"]))
+            self.layers.append(getattr(self,"l"+str(i+1)))
+        
 
         self.fc = nn.Linear(256, num_class)
         nn.init.normal(self.fc.weight, 0, math.sqrt(2. / num_class))
         bn_init(self.data_bn, 1)
         
         self._criterion = criterion
-        self.layers = [
-            self.l1,
-            self.l2,
-            self.l3,
-            self.l4,
-            self.l5,
-            self.l6,
-            self.l7,
-            self.l8,
-            self.l9,
-            self.l10,
-        ]
+        
   
     def forward(self, x, weights):
         N, C, T, V, M = x.size()
