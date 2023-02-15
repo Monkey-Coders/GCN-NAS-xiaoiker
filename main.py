@@ -19,6 +19,10 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 import random
 import inspect
 import torch.backends.cudnn as cudnn
+import wandb
+from create_random_architectures import get_model_hash
+
+wandb.init(project="max-train", entity="gcn-nas")
 
 
 def init_seed(_):
@@ -217,11 +221,13 @@ class Processor():
         self.output_device = output_device
         Model = import_class(self.arg.model)
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
-        print(Model)
+        #print(Model)
         self.model = Model(**self.arg.model_args).cuda(output_device)
-        print(self.model)
+        self.model_hash = get_model_hash(self.model)
+        #print(self.model)
         #num = sum(p.numel() for p in self.model.parameters())/1000/1000
         #print(num)
+        wandb.watch(self.model)
 
         self.loss = nn.CrossEntropyLoss().cuda(output_device)
 
@@ -254,7 +260,6 @@ class Processor():
                     print('  ' + d)
                 state.update(weights)
                 self.model.load_state_dict(state)
-
         if type(self.arg.device) is list:
             if len(self.arg.device) > 1:
                 self.model = nn.DataParallel(
@@ -382,7 +387,10 @@ class Processor():
             self.train_writer.add_scalar('loss', loss.item(), self.global_step)
             self.train_writer.add_scalar('loss_l1', l1, self.global_step)
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
-
+            if batch_idx % 10 == 0: # TODO: What should be the interval?
+                wandb.log({"loss" : loss.item()})
+                wandb.log({"acc" : acc})
+                wandb.log({"loss_l1" : l1})
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
             self.train_writer.add_scalar('lr', self.lr, self.global_step)
@@ -486,7 +494,9 @@ class Processor():
         if self.arg.phase == 'train':
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
             self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
+            start_time = time.time()
             for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
+
                 if self.lr < 1e-4:
                     break
                 save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
@@ -499,7 +509,14 @@ class Processor():
                     save_score=self.arg.save_score,
                     loader_name=['test'])
 
+            end_time = time.time()
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
+            # Store val_accuracy in architectures/generated_architectures.json
+            with open('architectures/generated_architectures.json', 'r') as f:
+                architectures = json.load(f)
+                architectures[self.model_hash]["val_acc"] = self.best_acc
+                architectures[self_model_hash]["time"] = end_time - start_time 
+
 
         elif self.arg.phase == 'test':
             if not self.arg.test_feeder_args['debug']:
