@@ -41,5 +41,6 @@ dependencies:
   - urllib3==1.26.14
   - Werkzeug==2.2.2
   - wheel==0.38.4
+  - wandb
   - zipp==3.12.0
 

@@ -3,18 +3,17 @@ model_saved_name: ./runs/ntu_cv_agcn_joint_Srch_CTN
 # feeder
 feeder: feeders.feeder.Feeder
 train_feeder_args:
-  data_path: ./data/ntu/xview/train_data_joint.npy
-  label_path: ./data/ntu/xview/train_label.pkl
+  data_path: ../max_data_out/ntu/xview/train_data_joint.npy
+  label_path: ../max_data_out/ntu/xview/train_label.pkl
   debug: False
   random_choose: True
   random_shift: False
   random_move: False
   window_size: 270
   normalization: False
-
 test_feeder_args:
-  data_path: ./data/ntu/xview/val_data_joint.npy
-  label_path: ./data/ntu/xview/val_label.pkl
+  data_path: ../max_data_out/ntu/xview/val_data_joint.npy
+  label_path: ../max_data_out/ntu/xview/val_label.pkl
 
 # model
 #Reduce model
@@ -24,7 +23,8 @@ test_feeder_args:
 ##Searched model
 #model: model.agcn3.Model
 #Searched model
-model: model.agcn3.Model
+#model: model.agcn3.Model
+model: model.dynamic_model.Model
 
 model_args:
   num_class: 60
@@ -33,6 +33,18 @@ model_args:
   graph: graph.ntu_rgb_d.Graph
   graph_args:
     labeling_mode: 'spatial'
+  weights:
+    - [0.1224, 0.1261, 0.1178, 0.1259, 0.01257, 0.1279, 0.1273, 0.1270]
+    - [0.1236, 0.1296, 0.1173, 0.1282, 0.1304, 0.1261, 0.1198, 0.1250]
+    - [0.1203, 0.1338, 0.1280, 0.1255, 0.1151, 0.1290, 0.1220, 0.1263]
+    - [0.1247, 0.1270, 0.1225, 0.1221, 0.1259, 0.1224, 0.1368, 0.1186]
+    - [0.1277, 0.1285, 0.1173, 0.1170, 0.1291, 0.1325, 0.1216, 0.1264]
+    - [0.1222, 0.1217, 0.1245, 0.1278, 0.1177, 0.1255, 0.1335, 0.1270]
+    - [0.1222, 0.1217, 0.1245, 0.1278, 0.1177, 0.1255, 0.1335, 0.1270]
+    - [0.1222, 0.1217, 0.1245, 0.1278, 0.1177, 0.1255, 0.1335, 0.1270]
+    - [0.1222, 0.1217, 0.1245, 0.1278, 0.1177, 0.1255, 0.1335, 0.1270]
+    - [0.1222, 0.1217, 0.1245, 0.1278, 0.1177, 0.1255, 0.01335, 0.01270]
+
 
 #optim
 weight_decay: 0.0006
@@ -40,8 +52,8 @@ base_lr: 0.1
 step: [30, 45, 60]
 
 # training
-device: [0, 1 ,2, 3]
-batch_size: 80
-test_batch_size: 40
-num_epoch: 70
+device: [0] #[0, 1]
+batch_size: 40
+test_batch_size: 20
+num_epoch: 30
 nesterov: True

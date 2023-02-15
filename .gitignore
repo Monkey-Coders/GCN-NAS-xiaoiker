@@ -6,3 +6,9 @@ hohup.out
 
 wandb/
 Run7/
+
+# Ignore all files from any lib directory
+lib/
+run/
+work_dir/
+runs/
