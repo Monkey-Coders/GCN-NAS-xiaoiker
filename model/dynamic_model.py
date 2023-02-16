@@ -12,7 +12,7 @@ def get_chebyshev_approximation(A, indices):
     A_ch3 = (4*torch.pow(A, 3)-3*A)
     A_ch2 = (2*torch.pow(A, 2) - torch.eye(A.size(-1)))
     approximations = [A, A_ch4s, A_ch4, A_ch3, A_ch2]
-    return torch.stack([approximations[i] for i in indices], dim=0)
+    return torch.stack([approximations[i] for i in indices], dim=0) if len(indices) >= 1 else []
 
 
 def import_class(name):

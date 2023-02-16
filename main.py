@@ -21,7 +21,7 @@ import inspect
 import torch.backends.cudnn as cudnn
 import wandb
 from create_random_architectures import get_model_hash
-
+import json
 wandb.init(project="max-train", entity="gcn-nas")
 
 
@@ -179,11 +179,12 @@ class Processor():
             if not arg.train_feeder_args['debug']:
                 if os.path.isdir(arg.model_saved_name):
                     print('log_dir: ', arg.model_saved_name, 'already exist')
-                    answer = input('delete it? y/n:')
+                    #answer = input('delete it? y/n:')
+                    answer = "n" # Just a hack to avoid the deadlock
                     if answer == 'y':
                         shutil.rmtree(arg.model_saved_name)
                         print('Dir removed: ', arg.model_saved_name)
-                        input('Refresh the website of tensorboard by pressing any keys')
+                        # input('Refresh the website of tensorboard by pressing any keys')
                     else:
                         print('Dir not removed: ', arg.model_saved_name)
                 self.train_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'train'), 'train')
@@ -515,8 +516,10 @@ class Processor():
             with open('architectures/generated_architectures.json', 'r') as f:
                 architectures = json.load(f)
                 architectures[self.model_hash]["val_acc"] = self.best_acc
-                architectures[self_model_hash]["time"] = end_time - start_time 
-
+                architectures[self.model_hash]["time"] = end_time - start_time 
+            wandb.finish()
+            with open('architectures/generated_architectures.json', 'w') as f:
+                json.dump(architectures, f)
 
         elif self.arg.phase == 'test':
             if not self.arg.test_feeder_args['debug']:
