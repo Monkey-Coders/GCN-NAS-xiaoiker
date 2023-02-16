@@ -42,7 +42,7 @@ default_configs = {
     "device": [0],
     "batch_size": 40,
     "test_batch_size": 20,
-    "num_epoch": 1, #30
+    "num_epoch": 30,
     "nesterov": True,
 }
 
