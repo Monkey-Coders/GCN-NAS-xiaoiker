@@ -87,4 +87,3 @@ if __name__ == "__main__":
             command = f"python3 main.py --config architectures/configs/{model_hash}.yaml"
             print("Calling command: ", command)
             call(command, shell=True)
-            exit()
