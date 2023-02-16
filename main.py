@@ -21,7 +21,7 @@ import inspect
 import torch.backends.cudnn as cudnn
 import wandb
 from create_random_architectures import get_model_hash
-
+import json
 wandb.init(project="max-train", entity="gcn-nas")
 
 
@@ -179,17 +179,16 @@ class Processor():
             if not arg.train_feeder_args['debug']:
                 if os.path.isdir(arg.model_saved_name):
                     print('log_dir: ', arg.model_saved_name, 'already exist')
-                    answer = input('delete it? y/n:')
+                    #answer = input('delete it? y/n:')
+                    answer = "n" # Just a hack to avoid the deadlock
                     if answer == 'y':
                         shutil.rmtree(arg.model_saved_name)
                         print('Dir removed: ', arg.model_saved_name)
-                        input('Refresh the website of tensorboard by pressing any keys')
+                        # input('Refresh the website of tensorboard by pressing any keys')
                     else:
                         print('Dir not removed: ', arg.model_saved_name)
                 self.train_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'train'), 'train')
                 self.val_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'val'), 'val')
-            else:
-                self.train_writer = self.val_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'test'), 'test')
         self.global_step = 0
         self.load_model()
         self.load_optimizer()
@@ -339,7 +338,7 @@ class Processor():
         # for name, param in self.model.named_parameters():
         #     self.train_writer.add_histogram(name, param.clone().cpu().data.numpy(), epoch)
         loss_value = []
-        self.train_writer.add_scalar('epoch', epoch, self.global_step)
+        #self.train_writer.add_scalar('epoch', epoch, self.global_step)
         self.record_time()
         timer = dict(dataloader=0.001, model=0.001, statistics=0.001)
         process = tqdm(loader)
@@ -383,9 +382,7 @@ class Processor():
 
             value, predict_label = torch.max(output.data, 1)
             acc = torch.mean((predict_label == label.data).float())
-            self.train_writer.add_scalar('acc', acc, self.global_step)
-            self.train_writer.add_scalar('loss', loss.item(), self.global_step)
-            self.train_writer.add_scalar('loss_l1', l1, self.global_step)
+            
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
             if batch_idx % 10 == 0: # TODO: What should be the interval?
                 wandb.log({"loss" : loss.item()})
@@ -393,7 +390,7 @@ class Processor():
                 wandb.log({"loss_l1" : l1})
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
-            self.train_writer.add_scalar('lr', self.lr, self.global_step)
+            # self.train_writer.add_scalar('lr', self.lr, self.global_step)
             # if self.global_step % self.arg.log_interval == 0:
             #     self.print_log(
             #         '\tBatch({}/{}) done. Loss: {:.4f}  lr:{:.6f}'.format(
@@ -495,8 +492,8 @@ class Processor():
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
             self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
             start_time = time.time()
-            for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
 
+            for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
                 if self.lr < 1e-4:
                     break
                 save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
@@ -515,8 +512,10 @@ class Processor():
             with open('architectures/generated_architectures.json', 'r') as f:
                 architectures = json.load(f)
                 architectures[self.model_hash]["val_acc"] = self.best_acc
-                architectures[self_model_hash]["time"] = end_time - start_time 
-
+                architectures[self.model_hash]["time"] = end_time - start_time 
+            wandb.finish()
+            with open('architectures/generated_architectures.json', 'w') as f:
+                json.dump(architectures, f)
 
         elif self.arg.phase == 'test':
             if not self.arg.test_feeder_args['debug']:
@@ -552,12 +551,12 @@ def import_class(name):
 
 if __name__ == '__main__':
     parser = get_parser()
-
     # load arg form config file
     p = parser.parse_args()
     if p.config is not None:
         with open(p.config, 'r') as f:
-            default_arg = yaml.load(f)
+            #default_arg = yaml.load(f)
+            default_arg = yaml.load(f, Loader=yaml.FullLoader)
         key = vars(p).keys()
         for k in default_arg.keys():
             if k not in key:

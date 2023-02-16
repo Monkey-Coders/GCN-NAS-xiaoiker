@@ -1,5 +1,7 @@
+import argparse
 from subprocess import call
 import json
+import time
 import yaml
 path = "architectures/generated_architectures.json"
 
@@ -44,14 +46,30 @@ default_configs = {
     "nesterov": True,
 }
 
+# Implement parser
+def get_parser():
+    parser = argparse.ArgumentParser(description="Train a model")
+    parser.add_argument("--start", type=str, default=0, required=True)
+    parser.add_argument("--end", type=str, default=25, required=True)
+    return parser
+
 
 
 if __name__ == "__main__":
     # Get the architectures from the path
+    print("Running train_random_architectures.py")
+    parser = get_parser()
+    args = parser.parse_args()
+    start = int(args.start)
+    end = int(args.end)
     with open(path, "r") as f:
         architectures = json.load(f)
     # Loop through the dictionary of architectures
-    for model_hash, model in architectures.items():
+    for i, (model_hash, model) in enumerate(architectures.items()):
+        if i < start:
+            continue
+        if i > end:
+            break
         # Check if model contains "val_acc"
         if "val_acc" not in model:
             # Create a config file
@@ -63,7 +81,8 @@ if __name__ == "__main__":
             # Save the config file as a yaml file in the work_dir
             with open(f"architectures/configs/{model_hash}.yaml", "w") as f:
                 yaml.dump(config, f)
-
+            # Sleep for 1 second
+            time.sleep(2)
             #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
             command = f"python3 main.py --config architectures/configs/{model_hash}.yaml"
             print("Calling command: ", command)
