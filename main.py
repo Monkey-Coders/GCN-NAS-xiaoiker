@@ -21,6 +21,7 @@ import inspect
 import torch.backends.cudnn as cudnn
 import wandb
 from create_random_architectures import get_model_hash
+import json
 
 wandb.init(project="max-train", entity="gcn-nas")
 
@@ -515,7 +516,7 @@ class Processor():
             with open('architectures/generated_architectures.json', 'r') as f:
                 architectures = json.load(f)
                 architectures[self.model_hash]["val_acc"] = self.best_acc
-                architectures[self_model_hash]["time"] = end_time - start_time 
+                architectures[self.model_hash]["time"] = end_time - start_time 
 
 
         elif self.arg.phase == 'test':
