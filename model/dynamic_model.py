@@ -1,9 +1,13 @@
+import types
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
 import numpy as np
 import math
+
+def no_op(self, x):
+    return x
 
 def get_chebyshev_approximation(A, indices):
     soft = nn.Softmax(-2)
@@ -187,6 +191,13 @@ class TCN_GCN_unit(nn.Module):
 class Model(nn.Module):
     def __init__(self, num_class=60, num_point=25, num_person=2, graph=None, graph_args=dict(), in_channels=3, weights = None):
         super(Model, self).__init__()
+        self.num_class = num_class
+        self.num_point = num_point
+        self.num_person = num_person
+        self.graph_input = graph
+        self.graph_args = graph_args
+        self.in_channels = in_channels
+        self.weights = weights
 
         if graph is None or weights is None:
             raise ValueError()
@@ -213,6 +224,16 @@ class Model(nn.Module):
         nn.init.normal(self.fc.weight, 0, math.sqrt(2. / num_class))
         bn_init(self.data_bn, 1)
 
+
+    def get_copy(self, bn=False):
+        model_new = Model(num_class=self.num_class, num_point=self.num_point, num_person=self.num_person, graph=self.graph_input, graph_args=self.graph_args, in_channels=self.in_channels, weights=self.weights)
+        if bn == False:
+            for l in model_new.modules():
+                if isinstance(l, nn.BatchNorm2d) or isinstance(l, nn.BatchNorm1d):
+                    l.forward = types.MethodType(no_op, l)
+        model_new.load_state_dict(self.state_dict(), strict=False)
+        return model_new
+    
     def forward(self, x):
         N, C, T, V, M = x.size()
 
