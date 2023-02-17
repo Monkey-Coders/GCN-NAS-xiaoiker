@@ -505,6 +505,7 @@ class Processor():
             old_best_loss = self.best_loss
             early_stop = 0
             for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
+                start_time_epoch = time.time()
                 if self.lr < 1e-4:
                     break
                 save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
@@ -525,7 +526,8 @@ class Processor():
                 if early_stop > 5:
                     print("There was no improvement in the last 5 epochs. Stopping training.")
                     break
-            
+                end_time_epoch = time.time()
+                print(f"Epoch: {epoch+1} took {end_time_epoch - start_time_epoch} seconds.")
                     
             
 
