@@ -2,6 +2,7 @@ import argparse
 from subprocess import call
 import json
 import time
+import os
 import yaml
 path = "architectures/generated_architectures.json"
 
@@ -10,8 +11,8 @@ default_configs = {
     # feeder
     "feeder": "feeders.feeder.Feeder",
     "train_feeder_args": {
-        "data_path": "./data/ntu/xview/train_data_joint.npy",
-        "label_path": "./data/ntu/xview/train_label.pkl",
+        "data_path": "../max_data_out/ntu/xview/train_data_joint.npy",
+        "label_path": "../max_data_out/ntu/xview/train_label.pkl",
         "debug": False,
         "random_choose": True,
         "random_shift": False,
@@ -20,8 +21,8 @@ default_configs = {
         "normalization": False,
     },
     "test_feeder_args": {
-        "data_path": "./data/ntu/xview/val_data_joint.npy",
-        "label_path": "./data/ntu/xview/val_label.pkl",
+        "data_path": "../max_data_out/ntu/xview/val_data_joint.npy",
+        "label_path": "../max_data_out/ntu/xview/val_label.pkl",
     },
     "model": None,
     "model_args": {
@@ -79,6 +80,10 @@ if __name__ == "__main__":
             config["work_dir"] = f"architectures/run/{model_hash}/work_dir"
             config["model_saved_name"] = f"architectures/run/{model_hash}/runs"
             # Save the config file as a yaml file in the work_dir
+            # Create folder architectures/configs if it does not exist
+            if not os.path.exists("architectures/configs"):
+                os.makedirs("architectures/configs")
+            
             with open(f"architectures/configs/{model_hash}.yaml", "w") as f:
                 yaml.dump(config, f)
             # Sleep for 1 second
