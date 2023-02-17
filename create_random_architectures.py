@@ -5,6 +5,7 @@ import json
 import hashlib
 import argparse
 from tqdm import tqdm
+import os
 
 path = "architectures/generated_architectures.json"
 
@@ -73,6 +74,10 @@ if __name__ == "__main__":
     architectures = args.architectures
     layers = args.layers
     operations = args.operations
+    if not os.path.exists(path):
+        os.makedirs(os.path.dirname(path), exist_ok=True)
+        with open(path, "w") as f:
+            json.dump({}, f)
     print(f"Starting to generate {architectures} random architectures")
     for i in tqdm(range(architectures)):
         weights = generate_random_weights(layers, operations)
