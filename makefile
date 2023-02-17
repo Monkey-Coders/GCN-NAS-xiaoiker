@@ -2,13 +2,13 @@ r:
 	chmod u+x job.slurm && sbatch job.slurm
 
 q:
-	squeue -u maxts
+	squeue -u zuimran
 
 s:
 	scancel $(id)
 
 sa:
-	scancel -u maxts
+	scancel -u zuimran
 
 t:
 	tail -f -n 1 GCN-NAS.out 

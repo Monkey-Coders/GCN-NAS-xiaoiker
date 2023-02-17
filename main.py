@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import argparse
+import json
 import os
 import time
 import numpy as np
@@ -13,6 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
+from ZeroCostFramework.zero_cost_controller import calculate_zc_proxy_scores
 from tensorboardX import SummaryWriter
 import shutil
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
@@ -22,7 +24,8 @@ import torch.backends.cudnn as cudnn
 import wandb
 from create_random_architectures import get_model_hash
 import json
-wandb.init(project="max-train", entity="gcn-nas")
+
+wandb.init(project="zaim-train", entity="gcn-nas")
 
 
 def init_seed(_):
@@ -195,6 +198,7 @@ class Processor():
         self.load_data()
         self.lr = self.arg.base_lr
         self.best_acc = 0
+        self.best_loss = 100
 
     def load_data(self):
         Feeder = import_class(self.arg.feeder)
@@ -467,6 +471,10 @@ class Processor():
             accuracy = self.data_loader[ln].dataset.top_k(score, 1)
             if accuracy > self.best_acc:
                 self.best_acc = accuracy
+            if loss < self.best_loss:
+                self.best_loss = loss
+                
+            
             # self.lr_scheduler.step(loss)
             print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
             if self.arg.phase == 'train':
@@ -486,13 +494,16 @@ class Processor():
                 with open('{}/epoch{}_{}_score.pkl'.format(
                         self.arg.work_dir, epoch + 1, ln), 'wb') as f:
                     pickle.dump(score_dict, f)
-
+            
     def start(self):
         if self.arg.phase == 'train':
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
             self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
+            # calculate_zc_proxy_scores(self.model, self.data_loader['train'], self.output_device, self.loss, self.model_hash)
+            
             start_time = time.time()
-
+            old_best_loss = self.best_loss
+            early_stop = 0
             for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
                 if self.lr < 1e-4:
                     break
@@ -505,17 +516,33 @@ class Processor():
                     epoch,
                     save_score=self.arg.save_score,
                     loader_name=['test'])
+                if self.best_loss < old_best_loss:
+                    old_best_loss = self.best_loss
+                    early_stop = 0
+                else:
+                    early_stop += 1
+                
+                if early_stop > 5:
+                    print("There was no improvement in the last 5 epochs. Stopping training.")
+                    break
+            
+                    
+            
 
             end_time = time.time()
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
             # Store val_accuracy in architectures/generated_architectures.json
+            wandb.finish()
             with open('architectures/generated_architectures.json', 'r') as f:
                 architectures = json.load(f)
                 architectures[self.model_hash]["val_acc"] = self.best_acc
                 architectures[self.model_hash]["time"] = end_time - start_time 
-            wandb.finish()
+            
             with open('architectures/generated_architectures.json', 'w') as f:
                 json.dump(architectures, f)
+            
+  
+            
 
         elif self.arg.phase == 'test':
             if not self.arg.test_feeder_args['debug']:

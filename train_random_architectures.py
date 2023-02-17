@@ -10,8 +10,8 @@ default_configs = {
     # feeder
     "feeder": "feeders.feeder.Feeder",
     "train_feeder_args": {
-        "data_path": "../max_data_out/ntu/xview/train_data_joint.npy",
-        "label_path": "../max_data_out/ntu/xview/train_label.pkl",
+        "data_path": "./data/ntu/xview/train_data_joint.npy",
+        "label_path": "./data/ntu/xview/train_label.pkl",
         "debug": False,
         "random_choose": True,
         "random_shift": False,
@@ -20,8 +20,8 @@ default_configs = {
         "normalization": False,
     },
     "test_feeder_args": {
-        "data_path": "../max_data_out/ntu/xview/val_data_joint.npy",
-        "label_path": "../max_data_out/ntu/xview/val_label.pkl",
+        "data_path": "./data/ntu/xview/val_data_joint.npy",
+        "label_path": "./data/ntu/xview/val_label.pkl",
     },
     "model": None,
     "model_args": {
