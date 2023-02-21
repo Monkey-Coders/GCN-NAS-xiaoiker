@@ -388,10 +388,10 @@ class Processor():
             acc = torch.mean((predict_label == label.data).float())
             
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
-            if batch_idx % 10 == 0: # TODO: What should be the interval?
-                wandb.log({"loss" : loss.item()})
-                wandb.log({"acc" : acc})
-                wandb.log({"loss_l1" : l1})
+            # if batch_idx % 10 == 0: # TODO: What should be the interval?
+            #     wandb.log({"loss" : loss.item()})
+            #     wandb.log({"acc" : acc})
+            #     wandb.log({"loss_l1" : l1})
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
             # self.train_writer.add_scalar('lr', self.lr, self.global_step)
@@ -476,6 +476,9 @@ class Processor():
                 
             
             # self.lr_scheduler.step(loss)
+            wandb.log({"acc" : accuracy, "epoch" : epoch})
+            wandb.log({"loss" : loss, "epoch" : epoch})
+            
             print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
             if self.arg.phase == 'train':
                 self.val_writer.add_scalar('loss', loss, self.global_step)
