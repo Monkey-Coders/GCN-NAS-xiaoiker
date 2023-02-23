@@ -14,7 +14,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
-# from ZeroCostFramework.zero_cost_controller import calculate_zc_proxy_scores
+from ZeroCostFramework.zero_cost_controller import calculate_zc_proxy_scores
 from tensorboardX import SummaryWriter
 import shutil
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
@@ -333,236 +333,20 @@ class Processor():
         split_time = time.time() - self.cur_time
         self.record_time()
         return split_time
-
-    def train(self, epoch, save_model=False):
-        self.model.train()
-        self.print_log('Training epoch: {}'.format(epoch + 1))
-        loader = self.data_loader['train']
-        self.adjust_learning_rate(epoch)
-        # for name, param in self.model.named_parameters():
-        #     self.train_writer.add_histogram(name, param.clone().cpu().data.numpy(), epoch)
-        loss_value = []
-        #self.train_writer.add_scalar('epoch', epoch, self.global_step)
-        self.record_time()
-        timer = dict(dataloader=0.001, model=0.001, statistics=0.001)
-        process = tqdm(loader)
-        if self.arg.only_train_part:
-            if epoch > self.arg.only_train_epoch:
-                print('only train part, require grad')
-                for key, value in self.model.named_parameters():
-                    if 'PA' in key:
-                        value.requires_grad = True
-                        # print(key + '-require grad')
-            else:
-                print('only train part, do not require grad')
-                for key, value in self.model.named_parameters():
-                    if 'PA' in key:
-                        value.requires_grad = False
-                        # print(key + '-not require grad')
-        for batch_idx, (data, label, index) in enumerate(process):
-            self.global_step += 1
-            # get data
-            data = Variable(data.float().cuda(self.output_device), requires_grad=False)
-            label = Variable(label.long().cuda(self.output_device), requires_grad=False)
-            timer['dataloader'] += self.split_time()
-
-            # forward
-            output = self.model(data)
-            # if batch_idx == 0 and epoch == 0:
-            #     self.train_writer.add_graph(self.model, output)
-            if isinstance(output, tuple):
-                output, l1 = output
-                l1 = l1.mean()
-            else:
-                l1 = 0
-            loss = self.loss(output, label) + l1
-
-            # backward
-            self.optimizer.zero_grad()
-            loss.backward()
-            self.optimizer.step()
-            loss_value.append(loss.item())
-            timer['model'] += self.split_time()
-
-            value, predict_label = torch.max(output.data, 1)
-            acc = torch.mean((predict_label == label.data).float())
-            
-            # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
-            # if batch_idx % 10 == 0: # TODO: What should be the interval?
-            #     wandb.log({"loss" : loss.item()})
-            #     wandb.log({"acc" : acc})
-            #     wandb.log({"loss_l1" : l1})
-            # statistics
-            self.lr = self.optimizer.param_groups[0]['lr']
-            # self.train_writer.add_scalar('lr', self.lr, self.global_step)
-            # if self.global_step % self.arg.log_interval == 0:
-            #     self.print_log(
-            #         '\tBatch({}/{}) done. Loss: {:.4f}  lr:{:.6f}'.format(
-            #             batch_idx, len(loader), loss.item(), lr))
-            timer['statistics'] += self.split_time()
-
-        # statistics of time consumption and loss
-        proportion = {
-            k: '{:02d}%'.format(int(round(v * 100 / sum(timer.values()))))
-            for k, v in timer.items()
-        }
-        self.print_log(
-            '\tMean training loss: {:.4f}.'.format(np.mean(loss_value)))
-        self.print_log(
-            '\tTime consumption: [Data]{dataloader}, [Network]{model}'.format(
-                **proportion))
-
-        if save_model:
-            state_dict = self.model.state_dict()
-            weights = OrderedDict([[k.split('module.')[-1],
-                                    v.cpu()] for k, v in state_dict.items()])
-
-            torch.save(weights, self.arg.model_saved_name + '-' + str(epoch) + '-' + str(int(self.global_step)) + '.pt')
-
-    def eval(self, epoch, save_score=False, loader_name=['test'], wrong_file=None, result_file=None):
-        #if epoch <10:
-        #    return
-        if wrong_file is not None:
-            f_w = open(wrong_file, 'w')
-        if result_file is not None:
-            f_r = open(result_file, 'w')
-        self.model.eval()
-        self.print_log('Eval epoch: {}'.format(epoch + 1))
-        for ln in loader_name:
-            loss_value = []
-            score_frag = []
-            right_num_total = 0
-            total_num = 0
-            loss_total = 0
-            step = 0
-            process = tqdm(self.data_loader[ln])
-            for batch_idx, (data, label, index) in enumerate(process):
-                data = Variable(
-                    data.float().cuda(self.output_device),
-                    requires_grad=False,
-                    volatile=True)
-                label = Variable(
-                    label.long().cuda(self.output_device),
-                    requires_grad=False,
-                    volatile=True)
-                output = self.model(data)
-                if isinstance(output, tuple):
-                    output, l1 = output
-                    l1 = l1.mean()
-                else:
-                    l1 = 0
-                loss = self.loss(output, label)
-                score_frag.append(output.data.cpu().numpy())
-                loss_value.append(loss.item())
-
-                _, predict_label = torch.max(output.data, 1)
-                step += 1
-
-                if wrong_file is not None or result_file is not None:
-                    predict = list(predict_label.cpu().numpy())
-                    true = list(label.data.cpu().numpy())
-                    for i, x in enumerate(predict):
-                        if result_file is not None:
-                            f_r.write(str(x) + ',' + str(true[i]) + '\n')
-                        if x != true[i] and wrong_file is not None:
-                            f_w.write(str(index[i]) + ',' + str(x) + ',' + str(true[i]) + '\n')
-            score = np.concatenate(score_frag)
-            loss = np.mean(loss_value)
-            accuracy = self.data_loader[ln].dataset.top_k(score, 1)
-            if accuracy > self.best_acc:
-                self.best_acc = accuracy
-            if loss < self.best_loss:
-                self.best_loss = loss
-                
-            
-            # self.lr_scheduler.step(loss)
-            wandb.log({"acc" : accuracy, "epoch" : epoch})
-            wandb.log({"loss" : loss, "epoch" : epoch})
-            
-            print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
-            if self.arg.phase == 'train':
-                self.val_writer.add_scalar('loss', loss, self.global_step)
-                self.val_writer.add_scalar('loss_l1', l1, self.global_step)
-                self.val_writer.add_scalar('acc', accuracy, self.global_step)
-
-            score_dict = dict(
-                zip(self.data_loader[ln].dataset.sample_name, score))
-            self.print_log('\tMean {} loss of {} batches: {}.'.format(
-                ln, len(self.data_loader[ln]), np.mean(loss_value)))
-            for k in self.arg.show_topk:
-                self.print_log('\tTop{}: {:.2f}%'.format(
-                    k, 100 * self.data_loader[ln].dataset.top_k(score, k)))
-
-            if save_score:
-                with open('{}/epoch{}_{}_score.pkl'.format(
-                        self.arg.work_dir, epoch + 1, ln), 'wb') as f:
-                    pickle.dump(score_dict, f)
-            
+ 
     def start(self):
-        if self.arg.phase == 'train':
-            self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
-            self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
-            # calculate_zc_proxy_scores(self.model, self.data_loader['train'], self.output_device, self.loss, self.model_hash)
+        self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
+        scores = calculate_zc_proxy_scores(self.model, self.data_loader['train'], self.output_device, self.loss, self.model_hash)
+        print(scores)
             
-            start_time = time.time()
-            old_best_loss = self.best_loss
-            early_stop = 0
-            for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
-                start_time_epoch = time.time()
-                if self.lr < 1e-4:
-                    break
-                save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
-                        epoch + 1 == self.arg.num_epoch)
-
-                self.train(epoch, save_model=save_model)
-
-                self.eval(
-                    epoch,
-                    save_score=self.arg.save_score,
-                    loader_name=['test'])
-                if self.best_loss < old_best_loss:
-                    old_best_loss = self.best_loss
-                    early_stop = 0
-                else:
-                    early_stop += 1
-                
-                if early_stop > 5:
-                    print("There was no improvement in the last 5 epochs. Stopping training.")
-                    break
-                end_time_epoch = time.time()
-                print(f"Epoch: {epoch+1} took {end_time_epoch - start_time_epoch} seconds.")
-                    
+            # with open('architectures/generated_architectures.json', 'r') as f:
+            #     architectures = json.load(f)
+            #     architectures[self.model_hash]["val_acc"] = self.best_acc
+            #     architectures[self.model_hash]["time"] = end_time - start_time 
             
-
-            end_time = time.time()
-            print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
-            # Store val_accuracy in architectures/generated_architectures.json
-            wandb.finish()
-            with open('architectures/generated_architectures.json', 'r') as f:
-                architectures = json.load(f)
-                architectures[self.model_hash]["val_acc"] = self.best_acc
-                architectures[self.model_hash]["time"] = end_time - start_time 
+            # with open('architectures/generated_architectures.json', 'w') as f:
+            #     json.dump(architectures, f)
             
-            with open('architectures/generated_architectures.json', 'w') as f:
-                json.dump(architectures, f)
-            
-  
-            
-
-        elif self.arg.phase == 'test':
-            if not self.arg.test_feeder_args['debug']:
-                wf = self.arg.model_saved_name + '_wrong.txt'
-                rf = self.arg.model_saved_name + '_right.txt'
-            else:
-                wf = rf = None
-            if self.arg.weights is None:
-                raise ValueError('Please appoint --weights.')
-            self.arg.print_log = False
-            self.print_log('Model:   {}.'.format(self.arg.model))
-            self.print_log('Weights: {}.'.format(self.arg.weights))
-            self.eval(epoch=0, save_score=self.arg.save_score, loader_name=['test'], wrong_file=wf, result_file=rf)
-            self.print_log('Done.\n')
-
 
 def str2bool(v):
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
