@@ -251,3 +251,17 @@ class Model(nn.Module):
         x = x.mean(3).mean(1)
 
         return self.fc(x)
+    
+
+    def forward_before_global_avg_pool(self, x):
+        outputs = []
+        def hook_fn(module, input_t, output_t):
+            outputs.append(output_t)
+
+        self.l9.register_forward_hook(hook_fn)
+
+        self.forward(x)
+
+        assert len(outputs) == 1
+        return outputs[0]
+        
