@@ -8,13 +8,11 @@ import numpy as np
 import yaml
 import pickle
 from collections import OrderedDict
-# torch
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
-# from ZeroCostFramework.zero_cost_controller import calculate_zc_proxy_scores
 from tensorboardX import SummaryWriter
 import shutil
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR

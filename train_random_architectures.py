@@ -14,10 +14,10 @@ default_configs = {
         "data_path": "./data/ntu/xview/train_data_joint.npy",
         "label_path": "./data/ntu/xview/train_label.pkl",
         "debug": False,
-        "random_choose": True,
+        "random_choose": False,
         "random_shift": False,
         "random_move": False,
-        "window_size": 270,
+        "window_size": -1,
         "normalization": False,
     },
     "test_feeder_args": {
@@ -72,7 +72,7 @@ if __name__ == "__main__":
         if i > end:
             break
         # Check if model contains "val_acc"
-        if "val_acc" not in model:
+        if "val_acc" in model:
             # Create a config file
             config = default_configs
             config["model_args"]["weights"] = model["weights"]
@@ -89,6 +89,6 @@ if __name__ == "__main__":
             # Sleep for 1 second
             time.sleep(2)
             #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
-            command = f"python3 main.py --config architectures/configs/{model_hash}.yaml"
+            command = f"python3 mainzc.py --config architectures/configs/{model_hash}.yaml"
             print("Calling command: ", command)
             call(command, shell=True)

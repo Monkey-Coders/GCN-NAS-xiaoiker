@@ -21,11 +21,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 import random
 import inspect
 import torch.backends.cudnn as cudnn
-import wandb
 from create_random_architectures import get_model_hash
 import json
 
-wandb.init(project="zaim-train", entity="gcn-nas")
 
 
 def init_seed(_):
@@ -230,7 +228,7 @@ class Processor():
         #print(self.model)
         #num = sum(p.numel() for p in self.model.parameters())/1000/1000
         #print(num)
-        wandb.watch(self.model)
+        # wandb.watch(self.model)
 
         self.loss = nn.CrossEntropyLoss().cuda(output_device)
 
@@ -337,15 +335,15 @@ class Processor():
     def start(self):
         self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
         scores = calculate_zc_proxy_scores(self.model, self.data_loader['train'], self.output_device, self.loss, self.model_hash)
-        print(scores)
+        with open('scores.json', 'w') as f:
+            json.dump(scores, f)
             
-            # with open('architectures/generated_architectures.json', 'r') as f:
-            #     architectures = json.load(f)
-            #     architectures[self.model_hash]["val_acc"] = self.best_acc
-            #     architectures[self.model_hash]["time"] = end_time - start_time 
-            
-            # with open('architectures/generated_architectures.json', 'w') as f:
-            #     json.dump(architectures, f)
+        with open('architectures/generated_architectures.json', 'r') as f:
+            architectures = json.load(f)
+            architectures[self.model_hash]["zero_cost_scores"] = scores
+        
+        with open('architectures/generated_architectures.json', 'w') as f:
+            json.dump(architectures, f)
             
 
 def str2bool(v):
