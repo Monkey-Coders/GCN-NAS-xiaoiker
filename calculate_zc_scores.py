@@ -73,21 +73,22 @@ if __name__ == "__main__":
             break
         # Check if model contains "val_acc"
         # Create a config file
-        config = default_configs
-        config["model_args"]["weights"] = model["weights"]
-        config["model"] = "model.dynamic_model.Model"
-        config["work_dir"] = f"architectures/run/{model_hash}/work_dir"
-        config["model_saved_name"] = f"architectures/run/{model_hash}/runs"
-        # Save the config file as a yaml file in the work_dir
-        # Create folder architectures/configs if it does not exist
-        if not os.path.exists("architectures/configs"):
-            os.makedirs("architectures/configs")
-        
-        with open(f"architectures/configs/{model_hash}.yaml", "w") as f:
-            yaml.dump(config, f)
-        # Sleep for 1 second
-        time.sleep(2)
-        #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
-        command = f"python3 mainzc.py --config architectures/configs/{model_hash}.yaml"
-        print("Calling command: ", command)
-        call(command, shell=True)
+        if "zero_cost_scores" not in model:  
+            config = default_configs
+            config["model_args"]["weights"] = model["weights"]
+            config["model"] = "model.dynamic_model.Model"
+            config["work_dir"] = f"architectures/run/{model_hash}/work_dir"
+            config["model_saved_name"] = f"architectures/run/{model_hash}/runs"
+            # Save the config file as a yaml file in the work_dir
+            # Create folder architectures/configs if it does not exist
+            if not os.path.exists("architectures/configs"):
+                os.makedirs("architectures/configs")
+            
+            with open(f"architectures/configs/{model_hash}.yaml", "w") as f:
+                yaml.dump(config, f)
+            # Sleep for 1 second
+            time.sleep(2)
+            #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
+            command = f"python3 mainzc.py --config architectures/configs/{model_hash}.yaml"
+            print("Calling command: ", command)
+            call(command, shell=True)
