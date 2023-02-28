@@ -43,6 +43,6 @@ pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu1
 # wandb login a049ba80f44a62c306d6bed8249174b30801d69e
 # echo "Finished logging in to wandb"
 
-python3 train_random_architectures.py --start 70 --end 101
+python3 calculate_zc_scores.py --start 0 --end 100
 
 uname -a
