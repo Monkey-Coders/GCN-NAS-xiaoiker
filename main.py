@@ -23,8 +23,9 @@ import wandb
 from create_random_architectures import get_model_hash
 import json
 
-wandb.init(project="zaim-train", entity="gcn-nas")
+wandb.init(project="zaim-train-8", entity="gcn-nas")
 
+path = "architectures_8/generated_architectures.json"
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -536,12 +537,12 @@ class Processor():
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
             # Store val_accuracy in architectures/generated_architectures.json
             wandb.finish()
-            with open('architectures/generated_architectures.json', 'r') as f:
+            with open(path, 'r') as f:
                 architectures = json.load(f)
                 architectures[self.model_hash]["val_acc"] = self.best_acc
                 architectures[self.model_hash]["time"] = end_time - start_time 
             
-            with open('architectures/generated_architectures.json', 'w') as f:
+            with open(path, 'w') as f:
                 json.dump(architectures, f)
             
   

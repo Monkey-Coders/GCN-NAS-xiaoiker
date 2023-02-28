@@ -4,7 +4,7 @@ import json
 import time
 import os
 import yaml
-path = "architectures/generated_architectures.json"
+path = "architectures_8/generated_architectures.json"
 
 default_configs = {
     

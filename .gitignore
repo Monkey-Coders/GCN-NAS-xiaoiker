@@ -12,3 +12,4 @@ lib/
 run/
 work_dir/
 runs/
+configs/
