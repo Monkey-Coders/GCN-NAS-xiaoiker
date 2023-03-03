@@ -2,7 +2,7 @@ import json
 # Read the file architectures/generated_architectures.json
 
 
-with open('architectures/generated_architectures.json', 'r') as f:
+with open('architectures_6/generated_architectures.json', 'r') as f:
     architectures = json.load(f)
     count = 0
     val_acc = []

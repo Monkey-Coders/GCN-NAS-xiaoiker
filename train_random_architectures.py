@@ -4,10 +4,9 @@ import json
 import time
 import os
 import yaml
-path = "architectures_8/generated_architectures.json"
+path = "architectures_6/generated_architectures.json"
 
 default_configs = {
-    
     # feeder
     "feeder": "feeders.feeder.Feeder",
     "train_feeder_args": {
@@ -51,7 +50,7 @@ default_configs = {
 def get_parser():
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--start", type=str, default=0, required=True)
-    parser.add_argument("--end", type=str, default=25, required=True)
+    parser.add_argument("--end", type=str, default=20, required=True)
     return parser
 
 
@@ -77,18 +76,18 @@ if __name__ == "__main__":
             config = default_configs
             config["model_args"]["weights"] = model["weights"]
             config["model"] = "model.dynamic_model.Model"
-            config["work_dir"] = f"architectures/run/{model_hash}/work_dir"
-            config["model_saved_name"] = f"architectures/run/{model_hash}/runs"
+            config["work_dir"] = f"architectures_6/run/{model_hash}/work_dir"
+            config["model_saved_name"] = f"architectures_6/run/{model_hash}/runs"
             # Save the config file as a yaml file in the work_dir
             # Create folder architectures/configs if it does not exist
-            if not os.path.exists("architectures/configs"):
-                os.makedirs("architectures/configs")
+            if not os.path.exists("architectures_6/configs"):
+                os.makedirs("architectures_6/configs")
             
-            with open(f"architectures/configs/{model_hash}.yaml", "w") as f:
+            with open(f"architectures_6/configs/{model_hash}.yaml", "w") as f:
                 yaml.dump(config, f)
             # Sleep for 1 second
             time.sleep(2)
             #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
-            command = f"python3 main.py --config architectures/configs/{model_hash}.yaml"
+            command = f"python3 main.py --config architectures_6/configs/{model_hash}.yaml"
             print("Calling command: ", command)
             call(command, shell=True)
