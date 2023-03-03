@@ -7,7 +7,7 @@ import argparse
 from tqdm import tqdm
 import os
 
-path = "architectures_8/generated_architectures.json"
+path = "architectures_6/generated_architectures.json"
 
 def get_model_hash(model):
     model_hash = hashlib.sha256(repr(model).encode()).hexdigest()

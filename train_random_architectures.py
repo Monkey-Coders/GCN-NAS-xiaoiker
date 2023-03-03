@@ -7,7 +7,6 @@ import yaml
 path = "architectures_8"
 
 default_configs = {
-    
     # feeder
     "feeder": "feeders.feeder.Feeder",
     "train_feeder_args": {
@@ -51,7 +50,7 @@ default_configs = {
 def get_parser():
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--start", type=str, default=0, required=True)
-    parser.add_argument("--end", type=str, default=25, required=True)
+    parser.add_argument("--end", type=str, default=20, required=True)
     return parser
 
 

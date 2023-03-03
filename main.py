@@ -24,7 +24,7 @@ import json
 
 wandb.init(project="zaim-train-8", entity="gcn-nas")
 
-path = "architectures_8/generated_architectures.json"
+path = "architectures_6/generated_architectures.json"
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
