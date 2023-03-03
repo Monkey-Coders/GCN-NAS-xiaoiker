@@ -1,6 +1,9 @@
 r:
 	chmod u+x job.slurm && sbatch job.slurm
 
+z:
+	chmod u+x zc.slurm && sbatch zc.slurm
+
 q:
 	squeue -u zuimran
 

@@ -20,7 +20,6 @@ import random
 import inspect
 import torch.backends.cudnn as cudnn
 import wandb
-from create_random_architectures import get_model_hash
 import json
 
 wandb.init(project="zaim-train-8", entity="gcn-nas")
@@ -97,7 +96,7 @@ def get_parser():
     parser.add_argument(
         '--num-worker',
         type=int,
-        default=32,
+        default=8,
         help='the number of worker for data loader')
     parser.add_argument(
         '--train-feeder-args',
@@ -166,6 +165,7 @@ def get_parser():
     parser.add_argument('--only_train_part', default=False)
     parser.add_argument('--only_train_epoch', default=0)
     parser.add_argument('--warm_up_epoch', default=0)
+    parser.add_argument('--model_hash', default="")
     return parser
 
 
@@ -225,7 +225,7 @@ class Processor():
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
         #print(Model)
         self.model = Model(**self.arg.model_args).cuda(output_device)
-        self.model_hash = get_model_hash(self.model)
+        self.model_hash = self.arg.model_hash
         #print(self.model)
         #num = sum(p.numel() for p in self.model.parameters())/1000/1000
         #print(num)

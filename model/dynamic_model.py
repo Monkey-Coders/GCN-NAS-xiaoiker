@@ -209,17 +209,17 @@ class Model(nn.Module):
         self.data_bn = nn.BatchNorm1d(num_person * in_channels * num_point)
 
         self.l1 = TCN_GCN_unit(3, 64, A, residual=False, weights=weights[0])
-        #self.l2 = TCN_GCN_unit(64, 64, A, weights=weights[1])
+        self.l2 = TCN_GCN_unit(64, 64, A, weights=weights[1])
         #self.l3 = TCN_GCN_unit(64, 64, A, weights=weights[2])
-        #self.l4 = TCN_GCN_unit(64, 64, A, weights=weights[3])
-        self.l5 = TCN_GCN_unit(64, 128, A, stride=2, weights=weights[1])
-        #self.l6 = TCN_GCN_unit(128, 128, A, weights=weights[3])
-        #self.l7 = TCN_GCN_unit(128, 128, A, weights=weights[6])
-        self.l8 = TCN_GCN_unit(128, 256, A, stride=2, weights=weights[2])
-        self.l9 = TCN_GCN_unit(256, 256, A, weights=weights[3])
+        self.l4 = TCN_GCN_unit(64, 64, A, weights=weights[2])
+        self.l5 = TCN_GCN_unit(64, 128, A, stride=2, weights=weights[3])
+        self.l6 = TCN_GCN_unit(128, 128, A, weights=weights[4])
+        self.l7 = TCN_GCN_unit(128, 128, A, weights=weights[5])
+        self.l8 = TCN_GCN_unit(128, 256, A, stride=2, weights=weights[6])
+        self.l9 = TCN_GCN_unit(256, 256, A, weights=weights[7])
         #self.l10 = TCN_GCN_unit(256, 256, A, weights=weights[9])
         #self.layers = [self.l1, self.l2, self.l3, self.l4, self.l5, self.l6, self.l7, self.l8, self.l9, self.l10]
-        self.layers = [self.l1, self.l5, self.l8, self.l9]
+        self.layers = [self.l1, self.l2, self.l4, self.l5, self.l6, self.l7, self.l8, self.l9]
 
         self.fc = nn.Linear(256, num_class)
         nn.init.normal(self.fc.weight, 0, math.sqrt(2. / num_class))

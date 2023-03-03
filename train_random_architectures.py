@@ -4,7 +4,7 @@ import json
 import time
 import os
 import yaml
-path = "architectures_8/generated_architectures.json"
+path = "architectures_8"
 
 default_configs = {
     
@@ -63,7 +63,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     start = int(args.start)
     end = int(args.end)
-    with open(path, "r") as f:
+    with open(f"{path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
     # Loop through the dictionary of architectures
     for i, (model_hash, model) in enumerate(architectures.items()):
@@ -77,18 +77,19 @@ if __name__ == "__main__":
             config = default_configs
             config["model_args"]["weights"] = model["weights"]
             config["model"] = "model.dynamic_model.Model"
-            config["work_dir"] = f"architectures/run/{model_hash}/work_dir"
-            config["model_saved_name"] = f"architectures/run/{model_hash}/runs"
+            config["work_dir"] = f"{path}/run/{model_hash}/work_dir"
+            config["model_saved_name"] = f"{path}/run/{model_hash}/runs"
+            config["model_hash"] = model_hash
             # Save the config file as a yaml file in the work_dir
             # Create folder architectures/configs if it does not exist
-            if not os.path.exists("architectures/configs"):
-                os.makedirs("architectures/configs")
+            if not os.path.exists(f"{path}/configs"):
+                os.makedirs(f"{path}/configs")
             
-            with open(f"architectures/configs/{model_hash}.yaml", "w") as f:
+            with open(f"{path}/configs/{model_hash}.yaml", "w") as f:
                 yaml.dump(config, f)
             # Sleep for 1 second
             time.sleep(2)
             #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
-            command = f"python3 main.py --config architectures/configs/{model_hash}.yaml"
+            command = f"python3 main.py --config {path}/configs/{model_hash}.yaml"
             print("Calling command: ", command)
             call(command, shell=True)
