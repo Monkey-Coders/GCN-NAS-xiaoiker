@@ -24,8 +24,6 @@ import torch.backends.cudnn as cudnn
 from create_random_architectures import get_model_hash
 import json
 
-
-
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
     torch.manual_seed(1)
@@ -163,6 +161,7 @@ def get_parser():
         default=0.0005,
         help='weight decay for optimizer')
     parser.add_argument('--only_train_part', default=False)
+    parser.add_argument('--save_path', default="architectures")
     parser.add_argument('--only_train_epoch', default=0)
     parser.add_argument('--warm_up_epoch', default=0)
     return parser
@@ -335,15 +334,17 @@ class Processor():
     def start(self):
         self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
         scores = calculate_zc_proxy_scores(self.model, self.data_loader['train'], self.output_device, self.loss, self.model_hash)
-        with open('scores.json', 'w') as f:
-            json.dump(scores, f)
             
-        with open('architectures/generated_architectures.json', 'r') as f:
+        with open(f'{self.arg.save_path}/generated_architectures.json', 'r') as f:
             architectures = json.load(f)
-            architectures[self.model_hash]["zero_cost_scores"] = scores
+            if "zero_cost_scores" not in architectures[self.model_hash]:
+                architectures[self.model_hash]["zero_cost_scores"] = {}
+                
+            architectures[self.model_hash]["zero_cost_scores"] = {**architectures[self.model_hash]["zero_cost_scores"], **scores}
         
-        with open('architectures/generated_architectures.json', 'w') as f:
+        with open(f'{self.arg.save_path}/generated_architectures.json', 'w') as f:
             json.dump(architectures, f)
+        print(scores)
             
 
 def str2bool(v):

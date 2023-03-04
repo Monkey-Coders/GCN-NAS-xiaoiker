@@ -4,7 +4,7 @@ import json
 import time
 import os
 import yaml
-path = "architectures_8"
+path = "architectures_6"
 
 default_configs = {
     
@@ -58,7 +58,7 @@ def get_parser():
 
 if __name__ == "__main__":
     # Get the architectures from the path
-    print("Running train_random_architectures.py")
+    print("Running calculate_zc_scores.py.py")
     parser = get_parser()
     args = parser.parse_args()
     start = int(args.start)
@@ -73,12 +73,13 @@ if __name__ == "__main__":
             break
         # Check if model contains "val_acc"
 
-        if "zero_cost_scores" not in model:             # Create a config file
+        if "zero_cost_scores" not in model or True:             # Create a config file
             config = default_configs
             config["model_args"]["weights"] = model["weights"]
             config["model"] = "model.dynamic_model.Model"
             config["work_dir"] = f"{path}/run/{model_hash}/work_dir"
             config["model_saved_name"] = f"{path}/run/{model_hash}/runs"
+            config["save_path"] = path
             # Save the config file as a yaml file in the work_dir
             # Create folder architectures/configs if it does not exist
             if not os.path.exists(f"{path}/configs"):
