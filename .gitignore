@@ -11,5 +11,5 @@ Run7/
 lib/
 run/
 work_dir/
-*/runs/
-*/configs/
+runs/
+configs/
