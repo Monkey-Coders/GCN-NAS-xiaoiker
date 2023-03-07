@@ -42,7 +42,7 @@ default_configs = {
     "device": [0],
     "batch_size": 40,
     "test_batch_size": 20,
-    "num_epoch": 30,
+    "num_epoch": 70,
     "nesterov": True,
 }
 
@@ -79,6 +79,7 @@ if __name__ == "__main__":
             config["work_dir"] = f"{path}/run/{model_hash}/work_dir"
             config["model_saved_name"] = f"{path}/run/{model_hash}/runs"
             config["model_hash"] = model_hash
+            config["save_path"] = path
             # Save the config file as a yaml file in the work_dir
             # Create folder architectures/configs if it does not exist
             if not os.path.exists(f"{path}/configs"):

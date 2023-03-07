@@ -22,9 +22,7 @@ import torch.backends.cudnn as cudnn
 import wandb
 import json
 
-wandb.init(project="zaim-train-8", entity="gcn-nas")
-
-path = "architectures_6/generated_architectures.json"
+wandb.init(project="zaim-train-8-all", entity="gcn-nas")
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -166,6 +164,7 @@ def get_parser():
     parser.add_argument('--only_train_epoch', default=0)
     parser.add_argument('--warm_up_epoch', default=0)
     parser.add_argument('--model_hash', default="")
+    parser.add_argument('--save_path', default="architectures")
     return parser
 
 
@@ -503,11 +502,11 @@ class Processor():
             self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
             # calculate_zc_proxy_scores(self.model, self.data_loader['train'], self.output_device, self.loss, self.model_hash)
             
-            start_time = time.time()
             old_best_loss = self.best_loss
             early_stop = 0
+            start_time = time.time()
             for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
-                start_time_epoch = time.time()
+                # start_time_epoch = time.time()
                 if self.lr < 1e-4:
                     break
                 save_model = ((epoch + 1) % self.arg.save_interval == 0) or (
@@ -528,8 +527,8 @@ class Processor():
                 if early_stop > 5:
                     print("There was no improvement in the last 5 epochs. Stopping training.")
                     break
-                end_time_epoch = time.time()
-                print(f"Epoch: {epoch+1} took {end_time_epoch - start_time_epoch} seconds.")
+                # end_time_epoch = time.time()
+                # print(f"Epoch: {epoch+1} took {end_time_epoch - start_time_epoch} seconds.")
                     
             
 
@@ -537,12 +536,12 @@ class Processor():
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
             # Store val_accuracy in architectures/generated_architectures.json
             wandb.finish()
-            with open(path, 'r') as f:
+            with open(f"{self.arg.save_path}/generated_architectures.json", 'r') as f:
                 architectures = json.load(f)
                 architectures[self.model_hash]["val_acc"] = self.best_acc
                 architectures[self.model_hash]["time"] = end_time - start_time 
             
-            with open(path, 'w') as f:
+            with open(f"{self.arg.save_path}/generated_architectures.json", 'w') as f:
                 json.dump(architectures, f)
             
   

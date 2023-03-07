@@ -8,8 +8,8 @@
 #SBATCH --constraint="A100"
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=8
-#SBATCH --job-name=TRAIN4
-#SBATCH --output=TRAIN4.out
+#SBATCH --job-name=TRAIN5
+#SBATCH --output=TRAIN5.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
