@@ -161,9 +161,10 @@ def get_parser():
         default=0.0005,
         help='weight decay for optimizer')
     parser.add_argument('--only_train_part', default=False)
-    parser.add_argument('--save_path', default="architectures")
     parser.add_argument('--only_train_epoch', default=0)
     parser.add_argument('--warm_up_epoch', default=0)
+    parser.add_argument('--model_hash', default="")
+    parser.add_argument('--save_path', default="architectures")
     return parser
 
 
@@ -223,7 +224,7 @@ class Processor():
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
         #print(Model)
         self.model = Model(**self.arg.model_args).cuda(output_device)
-        self.model_hash = get_model_hash(self.model)
+        self.model_hash = self.arg.model_hash
         #print(self.model)
         #num = sum(p.numel() for p in self.model.parameters())/1000/1000
         #print(num)

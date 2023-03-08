@@ -79,6 +79,7 @@ if __name__ == "__main__":
             config["model"] = "model.dynamic_model.Model"
             config["work_dir"] = f"{path}/run/{model_hash}/work_dir"
             config["model_saved_name"] = f"{path}/run/{model_hash}/runs"
+            config["model_hash"] = model_hash
             config["save_path"] = path
             # Save the config file as a yaml file in the work_dir
             # Create folder architectures/configs if it does not exist
