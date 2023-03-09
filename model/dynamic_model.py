@@ -208,7 +208,13 @@ class Model(nn.Module):
         A = self.graph.A
         self.data_bn = nn.BatchNorm1d(num_person * in_channels * num_point)
         
-        if len(weights) == 6:
+        if len(weights) == 4:
+            self.l1 = TCN_GCN_unit(3, 64, A, residual=False, weights=weights[0])
+            self.l5 = TCN_GCN_unit(64, 128, A, stride=2, weights=weights[1])
+            self.l8 = TCN_GCN_unit(128, 256, A, stride=2, weights=weights[2])
+            self.l9 = TCN_GCN_unit(256, 256, A, weights=weights[3])
+            self.layers = [self.l1, self.l5, self.l8, self.l9]
+        elif len(weights) == 6:
             self.l1 = TCN_GCN_unit(3, 64, A, residual=False, weights=weights[0])
             self.l2 = TCN_GCN_unit(64, 64, A, weights=weights[1])
             self.l5 = TCN_GCN_unit(64, 128, A, stride=2, weights=weights[2])

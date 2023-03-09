@@ -4,7 +4,7 @@ import json
 import time
 import os
 import yaml
-path = "architectures_6"
+path = "."
 
 default_configs = {
     
