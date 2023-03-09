@@ -4,7 +4,7 @@ import json
 import time
 import os
 import yaml
-path = "."
+path = "experiment"
 
 default_configs = {
     
@@ -73,7 +73,7 @@ if __name__ == "__main__":
             break
         # Check if model contains "val_acc"
 
-        if "zero_cost_scores" not in model or True:             # Create a config file
+        if "zero_cost_scores" not in model or False:             # Create a config file
             config = default_configs
             config["model_args"]["weights"] = model["weights"]
             config["model"] = "model.dynamic_model.Model"
@@ -89,7 +89,7 @@ if __name__ == "__main__":
             with open(f"{path}/configs/{model_hash}.yaml", "w") as f:
                 yaml.dump(config, f)
             # Sleep for 1 second
-            time.sleep(2)
+            time.sleep(1)
             #call(["python3", "train.py", f"architectures/configs/{model_hash}.yaml"])
             command = f"python3 mainzc.py --config {path}/configs/{model_hash}.yaml"
             print("Calling command: ", command)
