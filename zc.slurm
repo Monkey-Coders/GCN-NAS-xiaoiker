@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="V100 | A100"
+#SBATCH --constraint="A100"
 #SBATCH --mem=30G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=ZC
@@ -38,6 +38,6 @@ pip install thop --user -q
 echo "Installing PyTorch"
 pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
 
-python3 calculate_zc_scores.py --start 0 --end 1
+python3 calculate_zc_scores.py --start 0 --end 250
 
 uname -a

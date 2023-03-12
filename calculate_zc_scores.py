@@ -73,7 +73,7 @@ if __name__ == "__main__":
             break
         # Check if model contains "val_acc"
 
-        if "zero_cost_scores" not in model or False:             # Create a config file
+        if "zero_cost_scores" not in model or True:             # Create a config file
             config = default_configs
             config["model_args"]["weights"] = model["weights"]
             config["model"] = "model.dynamic_model.Model"
