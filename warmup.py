@@ -10,6 +10,7 @@ import numpy as np
 import random
 import torch.nn as nn
 import scipy
+import json
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -81,11 +82,21 @@ def initialize_model(path, file_name):
         model.load_state_dict(state)
 
     
-    
+def get_zc_scores(path, file_name):
+    model = initialize_model(path, file_name)
+    data_loader = load_data(path)
+    config = get_config(path)
+    device = config["device"][0]
+    loss_function = nn.CrossEntropyLoss().cuda(device)
+    save_path = "test"
+
+    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
+    return scores
+
 
 
 if __name__ == "__main__":
-    val_acc = 0.7876054852320675
+    """ val_acc = 0.7876054852320675
     print(f"Val acc: {val_acc}")
     model = initialize_model(path, "runs-1-1896.pt")
     data_loader = load_data(path)
@@ -95,38 +106,39 @@ if __name__ == "__main__":
     save_path = "test"
 
     scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
-    print(scores)
+    print(scores) """
+
+    epochs = 10
+
+
+    base_path = "experiment"
     
+    with open(f"{base_path}/generated_architectures.json", "r") as f:
+        architectures = json.load(f)
+        # Map over keys 
+        for model_hash in architectures.keys():
+            print("Model hash: ", model_hash)
+            try:
+                pt_files = [f for f in os.listdir(f"{base_path}/run/{model_hash}") if f.endswith(".pt")]
+            except:
+                continue
+        
+            for file in pt_files:
+                epoch = int(file.split("-")[1]) 
+                if epoch > 10:
+                    continue
+                scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
+                print(f"Epoch: {epoch}")
+                print(scores)
 
-    model = initialize_model(path, "runs-3-3792.pt")
-    data_loader = load_data(path)
-    config = get_config(path)
-    device = config["device"][0]
-    loss_function = nn.CrossEntropyLoss().cuda(device)
-    save_path = "test"
-
-    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
-    print(scores)
-
-    model = initialize_model(path, "runs-5-5688.pt")
-    data_loader = load_data(path)
-    config = get_config(path)
-    device = config["device"][0]
-    loss_function = nn.CrossEntropyLoss().cuda(device)
-    save_path = "test"
-
-    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
-    print(scores)
-
-    model = initialize_model(path, "runs-7-7584.pt")
-    data_loader = load_data(path)
-    config = get_config(path)
-    device = config["device"][0]
-    loss_function = nn.CrossEntropyLoss().cuda(device)
-    save_path = "test"
-
-    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
-    print(scores)
-
-
+                # We need to load the generated_architectures.json file
+                
+                with open(f"experiment/generated_architectures.json", "r") as f:
+                    results = json.load(f)
+                    # If architectures[model_hash][zero_cost_scores_{epoch}] does not exist, then we need to add it
+                    if f"zero_cost_scores_{epoch}" not in results[model_hash]:
+                        print(f"Adding zero cost scores for epoch {epoch}")
+                        results[model_hash][f"zero_cost_scores_{epoch}"] = scores
+                        with open(f"experiment/generated_architectures.json", "w") as f:
+                            json.dump(results, f)
 
