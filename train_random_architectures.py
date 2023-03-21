@@ -4,7 +4,6 @@ import json
 import time
 import os
 import yaml
-path = "architectures_8"
 
 default_configs = {
     # feeder
@@ -51,6 +50,7 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--start", type=str, default=0, required=True)
     parser.add_argument("--end", type=str, default=20, required=True)
+    parser.add_argument("--path", type=str, default="architecture", required=True)
     return parser
 
 
@@ -62,6 +62,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     start = int(args.start)
     end = int(args.end)
+    path = str(args.path)
     with open(f"{path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
     # Loop through the dictionary of architectures
