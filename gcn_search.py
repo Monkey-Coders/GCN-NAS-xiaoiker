@@ -20,9 +20,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 import random
 import inspect
 import torch.backends.cudnn as cudnn
-import wandb
+#import wandb
 
-wandb.init(project="zaim", entity="gcn-nas")
+#wandb.init(project="zaim", entity="gcn-nas")
 
 
 #from model.architect import Architect
@@ -233,7 +233,7 @@ class Processor():
         
         self.model = Model(**self.arg.model_args).cuda(output_device)
         #self.Archi = Architect(self.model)
-        wandb.watch(self.model)
+        #wandb.watch(self.model)
         
         #for name, param in self.model.named_parameters():
             #print(name)
@@ -280,14 +280,14 @@ class Processor():
     def load_optimizer(self):
         if self.arg.optimizer == 'SGD':
             self.optimizer = optim.SGD(
-                list(self.model.module.parameters())[1:],
+                list(self.model.parameters())[1:],
                 lr=self.arg.base_lr,
                 momentum=0.9,
                 nesterov=self.arg.nesterov,
                 weight_decay=self.arg.weight_decay)
         elif self.arg.optimizer == 'Adam':
             self.optimizer = optim.Adam(
-                list(self.model.module.parameters())[1:],
+                list(self.model.parameters())[1:],
                 lr=self.arg.base_lr,
                 weight_decay=self.arg.weight_decay)
         else:
@@ -374,7 +374,7 @@ class Processor():
         weights = F.softmax(weights, dim=-1)
         
         self.print_debug(f"weights: {weights}")
-        self.model.module.train()
+        self.model.train()
         
         self.print_log('Training epoch: {}'.format(epoch + 1))
         
@@ -390,13 +390,13 @@ class Processor():
         if self.arg.only_train_part:
             if epoch > self.arg.only_train_epoch:
                 print('only train part, require grad')
-                for key, value in self.model.module.named_parameters():
+                for key, value in self.model.named_parameters():
                     if 'PA' in key:
                         value.requires_grad = True
                         # print(key + '-require grad')
             else:
                 print('only train part, do not require grad')
-                for key, value in self.model.module.named_parameters():
+                for key, value in self.model.named_parameters():
                     if 'PA' in key:
                         value.requires_grad = False
                         # print(key + '-not require grad')
@@ -408,7 +408,7 @@ class Processor():
             timer['dataloader'] += self.split_time()
 
             # forward
-            output = self.model.module(data, weights)
+            output = self.model(data, weights)
             # if batch_idx == 0 and epoch == 0:
             #     self.train_writer.add_graph(self.model, output)
             if isinstance(output, tuple):
@@ -431,10 +431,10 @@ class Processor():
             self.train_writer.add_scalar('loss', loss.item(), self.global_step)
             self.train_writer.add_scalar('loss_l1', l1, self.global_step)
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
-            if batch_idx % 10 == 0: # TODO: What should be the interval?
+            """ if batch_idx % 10 == 0: # TODO: What should be the interval?
                 wandb.log({"loss" : loss.item()})
                 wandb.log({"acc" : acc})
-                wandb.log({"loss_l1" : l1})
+                wandb.log({"loss_l1" : l1}) """
 
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
@@ -462,7 +462,7 @@ class Processor():
         self.print_debug(f"proportion: {proportion}")
         self.print_debug(f"mean_loss_value: {np.mean(loss_value)}")
         if save_model:
-            state_dict = self.model.module.state_dict()
+            state_dict = self.model.state_dict()
             weights = OrderedDict([[k.split('module.')[-1],
                                     v.cpu()] for k, v in state_dict.items()])
 
@@ -494,7 +494,7 @@ class Processor():
             f_w = open(wrong_file, 'w')
         if result_file is not None:
             f_r = open(result_file, 'w')
-        self.model.module.eval()
+        self.model.eval()
         self.print_log('Eval epoch: {}'.format(epoch + 1))
         for ln in loader_name:
             loss_value = []
@@ -513,7 +513,7 @@ class Processor():
                     label.long().cuda(self.output_device),
                     requires_grad=False,
                     volatile=True)
-                output = self.model.module(data, weights)
+                output = self.model(data, weights)
                 if isinstance(output, tuple):
                     output, l1 = output
                     l1 = l1.mean()
@@ -568,7 +568,7 @@ class Processor():
 
     def start(self):
         # CEM
-        n_layers = len(self.model.module.layers)
+        n_layers = len(self.model.layers)
         n_ops = 8
         param_size = int(n_layers*n_ops)
         
@@ -586,6 +586,7 @@ class Processor():
         sampler = IMSampler(es)
         
         if self.arg.phase == 'train':
+            start_time = time.time()
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
             self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
             for epoch in range(self.arg.start_epoch, self.arg.num_epoch):
@@ -604,6 +605,18 @@ class Processor():
 #                    loader_name=['test'])
 
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
+            end_time = time.time()
+            # Create a file if not exists
+            if not os.path.exists("search_info.txt"):
+                with open("search_info.txt", "w") as f:
+                    f.write("")
+            # Write the best accuracy and model name to the file
+            with open("search_info.txt", "a") as f:
+                f.write(f"{self.best_acc}|{self.arg.model_saved_name}\n")
+                # Write the total time in seconds to the file
+                f.write(f"Total time in seconds: {end_time - start_time}")
+            
+
 
         elif self.arg.phase == 'test':
             if not self.arg.test_feeder_args['debug']:
@@ -655,11 +668,11 @@ if __name__ == '__main__':
 
     arg = parser.parse_args()
     init_seed(0)
-    wandb.config = {
+    """ wandb.config = {
         "learning_rate" : arg.base_lr,
         "epochs" : arg.num_epoch,
         "batch_size" : arg.batch_size,
-    }
+    } """
 
 
     processor = Processor(arg)
