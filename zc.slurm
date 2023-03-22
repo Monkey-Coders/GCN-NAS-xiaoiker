@@ -1,11 +1,10 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=8:00:00
+#SBATCH --time=72:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:1
-#SBATCH --constraint="A100"
+#SBATCH --gres=gpu:A100m80:1
 #SBATCH --mem=30G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=ZC
@@ -38,9 +37,6 @@ pip install thop --user -q
 echo "Installing PyTorch"
 pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
 
-python3 merge_architectures.py
-# python3 calculate_zc_scores.py --start 0 --end 500
-# python3 zero_cost_proxies/calculate_correlation.py
-# python3 zero_cost_proxies/calculate_vote.py
+python3 warmup.py
 
 uname -a

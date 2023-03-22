@@ -20,9 +20,9 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 import random
 import inspect
 import torch.backends.cudnn as cudnn
-#import wandb
+import wandb
 
-#wandb.init(project="zaim", entity="gcn-nas")
+wandb.init(project="zaim", entity="gcn-nas")
 
 
 #from model.architect import Architect
@@ -233,7 +233,7 @@ class Processor():
         
         self.model = Model(**self.arg.model_args).cuda(output_device)
         #self.Archi = Architect(self.model)
-        #wandb.watch(self.model)
+        wandb.watch(self.model)
         
         #for name, param in self.model.named_parameters():
             #print(name)
@@ -431,10 +431,10 @@ class Processor():
             self.train_writer.add_scalar('loss', loss.item(), self.global_step)
             self.train_writer.add_scalar('loss_l1', l1, self.global_step)
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
-            """ if batch_idx % 10 == 0: # TODO: What should be the interval?
+            if batch_idx % 10 == 0: # TODO: What should be the interval?
                 wandb.log({"loss" : loss.item()})
                 wandb.log({"acc" : acc})
-                wandb.log({"loss_l1" : l1}) """
+                
 
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
@@ -546,7 +546,6 @@ class Processor():
                 self.val_writer.add_scalar('loss_l1', l1, self.global_step)
                 self.val_writer.add_scalar('acc', accuracy, self.global_step)
 
-                # wandb.log({'loss': loss, 'loss_l1': l1, 'acc': accuracy}, step=self.global_step)
 
             score_dict = dict(
                 zip(self.data_loader[ln].dataset.sample_name, score))
@@ -668,11 +667,11 @@ if __name__ == '__main__':
 
     arg = parser.parse_args()
     init_seed(0)
-    """ wandb.config = {
+    wandb.config = {
         "learning_rate" : arg.base_lr,
         "epochs" : arg.num_epoch,
         "batch_size" : arg.batch_size,
-    } """
+    } 
 
 
     processor = Processor(arg)

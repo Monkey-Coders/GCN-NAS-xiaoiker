@@ -98,17 +98,6 @@ def get_zc_scores(path, file_name):
 
 
 if __name__ == "__main__":
-    """ val_acc = 0.7876054852320675
-    print(f"Val acc: {val_acc}")
-    model = initialize_model(path, "runs-1-1896.pt")
-    data_loader = load_data(path)
-    config = get_config(path)
-    device = config["device"][0]
-    loss_function = nn.CrossEntropyLoss().cuda(device)
-    save_path = "test"
-
-    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
-    print(scores) """
 
     epochs = 10
 
@@ -129,7 +118,7 @@ if __name__ == "__main__":
                 epoch = int(file.split("-")[1]) 
                 if epoch > 10:
                     continue
-                # if f"zero_cost_scores_{epoch}" in results[model_hash]:
+                # if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
                 #     continue
                 try:
                     scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)

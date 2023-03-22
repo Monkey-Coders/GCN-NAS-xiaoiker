@@ -345,7 +345,6 @@ class Processor():
         
         with open(f'{self.arg.save_path}/generated_architectures.json', 'w') as f:
             json.dump(architectures, f)
-        print(scores)
             
 
 def str2bool(v):
