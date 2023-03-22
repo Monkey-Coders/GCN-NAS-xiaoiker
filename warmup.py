@@ -47,7 +47,6 @@ def get_config(path):
         config = yaml.load(f, Loader=yaml.FullLoader)
     return config
 
-path = "architectures/run/2ecc95faf6febc1db5ca5b2a06eed301a46289493dbe6fae5a94d5228e806432"
 def initialize_model(path, file_name):
     # Get the config file from the model path
     config = get_config(path)
@@ -80,10 +79,13 @@ def initialize_model(path, file_name):
             print('  ' + d)
         state.update(weights)
         model.load_state_dict(state)
+        return None
 
     
 def get_zc_scores(path, file_name):
     model = initialize_model(path, file_name)
+    if model is None:
+        raise Exception("Model is None")
     data_loader = load_data(path)
     config = get_config(path)
     device = config["device"][0]
@@ -129,7 +131,10 @@ if __name__ == "__main__":
                     continue
                 if f"zero_cost_scores_{epoch}" in results[model_hash]:
                     continue
-                scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
+                try:
+                    scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
+                except:
+                    continue
                 print(f"Epoch: {epoch}")
                 print(scores)
 
