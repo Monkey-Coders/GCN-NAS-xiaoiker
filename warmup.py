@@ -129,8 +129,8 @@ if __name__ == "__main__":
                 epoch = int(file.split("-")[1]) 
                 if epoch > 10:
                     continue
-                if f"zero_cost_scores_{epoch}" in results[model_hash]:
-                    continue
+                # if f"zero_cost_scores_{epoch}" in results[model_hash]:
+                #     continue
                 try:
                     scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
                 except:

@@ -4,15 +4,14 @@ import matplotlib.pyplot as plt
 from ZeroCostFramework.utils.util_functions import get_proxies
 base_path = "experiment"
 
-epochs = ["zero_cost_scores_1", "zero_cost_scores_3", "zero_cost_scores_5", "zero_cost_scores_7", "zero_cost_scores_9"]
+epochs = ["zero_cost_scores", "zero_cost_scores_1", "zero_cost_scores_3", "zero_cost_scores_5", "zero_cost_scores_7", "zero_cost_scores_9"]
 
-def validate_architecture(architecture):
-    return all(format in architecture for format in ["val_acc", *epochs])
+def validate_architecture(architecture, epoch):
+    return all(format in architecture for format in ["val_acc", epoch])
 
 
 if __name__ == '__main__':
-    zero_cost_proxies = ["synflow"] #get_proxies()
-    
+    zero_cost_proxies = get_proxies()
 
     with open(f'{base_path}/generated_architectures.json') as f:
         architectures = json.load(f)
@@ -24,7 +23,6 @@ if __name__ == '__main__':
         correlations = {}
     
     for epoch in epochs:
-        epoch_number = int(epoch.split("_")[-1])
         if epoch not in correlations:
             correlations[epoch] = {}
 
@@ -32,13 +30,12 @@ if __name__ == '__main__':
             proxies = []
             val_accs = []
             for architecture in architectures:
-                if validate_architecture(architectures[architecture]):
+                if validate_architecture(architectures[architecture], epoch):
                     if proxy in architectures[architecture][epoch]:
                         proxies.append(architectures[architecture][epoch][proxy]["score"])
                         val_accs.append(architectures[architecture]["val_acc"])
-
-            correlations[epoch][proxy] = scipy.stats.spearmanr(proxies, val_accs)[0]
-
+            correlations[epoch][proxy] = scipy.stats.spearmanr(proxies, val_accs, nan_policy='omit')[0]
+            
     with open(f'{base_path}/correlations.json', 'w') as f:
         json.dump(correlations, f)
 
@@ -46,9 +43,13 @@ if __name__ == '__main__':
         x = []
         y = []
         for epoch in epochs:
-            x.append(int(epoch.split("_")[-1]))
+            try:
+                epoch_number = int(epoch.split("_")[-1])
+            except:
+                epoch_number = 0
+            x.append(epoch_number)
             y.append(correlations[epoch][proxy])
-        plt.plot(x, y, label=proxy)
+        plt.plot(x, y, "-D", label=proxy, markevery=[0])
     plt.legend()
     plt.xlabel("Epoch")
     plt.ylabel("Spearman Correlation")
