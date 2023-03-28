@@ -71,9 +71,6 @@ def initialize_model(path, file_name):
     except:
         state = model.state_dict()
         diff = list(set(state.keys()).difference(set(weights.keys())))
-        print("*"*50)
-        print(set(weights.keys()))
-        print("*"*50)
         print('Can not find these weights:')
         for d in diff:
             print('  ' + d)
@@ -112,29 +109,31 @@ if __name__ == "__main__":
             try:
                 pt_files = [f for f in os.listdir(f"{base_path}/run/{model_hash}") if f.endswith(".pt")]
             except:
+                with open(f"experiment/run_not_found.txt", "a") as f:
+                    f.write(model_hash + "\n")
+                            
                 continue
         
             for file in pt_files:
                 epoch = int(file.split("-")[1]) 
                 if epoch > 10:
                     continue
-                # if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
-                #     continue
                 try:
                     scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
-                except:
+                except Exception as e:
+                    print(f"Error: {e}")
                     continue
                 print(f"Epoch: {epoch}")
                 print(scores)
 
-                # We need to load the generated_architectures.json file
                 
                 with open(f"experiment/generated_architectures.json", "r") as f:
                     results = json.load(f)
-                    # If architectures[model_hash][zero_cost_scores_{epoch}] does not exist, then we need to add it
+                    print(f"Adding zero cost scores for epoch {epoch}")
                     if f"zero_cost_scores_{epoch}" not in results[model_hash]:
-                        print(f"Adding zero cost scores for epoch {epoch}")
                         results[model_hash][f"zero_cost_scores_{epoch}"] = scores
-                        with open(f"experiment/generated_architectures.json", "w") as f:
-                            json.dump(results, f)
+                    else:
+                        results[model_hash][f"zero_cost_scores_{epoch}"] = {**architectures[model_hash][f"zero_cost_scores_{epoch}"], **scores}
+                    with open(f"experiment/generated_architectures.json", "w") as f:
+                        json.dump(results, f)
 

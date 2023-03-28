@@ -1,15 +1,15 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=94:00:00
+#SBATCH --time=10:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="A100"
 #SBATCH --mem=40G
-#SBATCH --cpus-per-task=8
-#SBATCH --job-name=TRAIN8_61_70
-#SBATCH --output=TRAIN8_61_70.out
+#SBATCH --cpus-per-task=4
+#SBATCH --job-name=TRAIN10
+#SBATCH --output=TRAIN10.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
@@ -44,6 +44,6 @@ echo "Logging in to wandb"
 wandb login a049ba80f44a62c306d6bed8249174b30801d69e
 echo "Finished logging in to wandb"
 
-python3 train_random_architectures.py --start 61 --end 70 --path "architectures_8"
+python3 train_random_architectures.py --start 0 --end 50 --path "architectures_10"
 
 uname -a
