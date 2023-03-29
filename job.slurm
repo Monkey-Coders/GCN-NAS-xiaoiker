@@ -1,17 +1,18 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=10:00:00
+#SBATCH --time=24:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="A100"
+#SBATCH --constraint="A100|V100"
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=4
-#SBATCH --job-name=TRAIN10
-#SBATCH --output=TRAIN10.out
+#SBATCH --job-name=train
+#SBATCH --output=train.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
+#SBATCH --export=hash_value
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -43,7 +44,7 @@ pip install wandb --user -q
 echo "Logging in to wandb"
 wandb login a049ba80f44a62c306d6bed8249174b30801d69e
 echo "Finished logging in to wandb"
-
-python3 train_random_architectures.py --start 0 --end 50 --path "architectures_10"
+echo $hash_value
+python3 zaim.py --hash $hash_value
 
 uname -a

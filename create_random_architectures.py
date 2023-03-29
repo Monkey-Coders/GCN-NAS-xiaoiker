@@ -7,7 +7,7 @@ import argparse
 from tqdm import tqdm
 import os
 
-path = "architectures_6/generated_architectures.json"
+path = "architectures_10/generated_architectures.json"
 
 def get_model_hash(model):
     model_hash = hashlib.sha256(repr(model).encode()).hexdigest()
@@ -65,7 +65,7 @@ def store_model(model, weights):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--architectures", type=int, default=50)
-parser.add_argument("--layers", type=int, default=8)
+parser.add_argument("--layers", type=int, default=10)
 parser.add_argument("--operations", type=int, default=8)
 
 # Main function

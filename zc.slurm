@@ -1,10 +1,11 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=2:00:00
+#SBATCH --time=5:00:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:A100m80:1
+#SBATCH --gres=gpu:1
+#SBATCH --constraint="V100|P100|A100"
 #SBATCH --mem=30G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=ZC

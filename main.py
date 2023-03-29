@@ -410,7 +410,7 @@ class Processor():
             '\tTime consumption: [Data]{dataloader}, [Network]{model}'.format(
                 **proportion))
 
-        if save_model or True:
+        if save_model or epoch < 10:
             state_dict = self.model.state_dict()
             weights = OrderedDict([[k.split('module.')[-1],
                                     v.cpu()] for k, v in state_dict.items()])
