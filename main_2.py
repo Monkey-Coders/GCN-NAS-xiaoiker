@@ -19,10 +19,8 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 import random
 import inspect
 import torch.backends.cudnn as cudnn
-import wandb
 import json
 
-wandb.init(project="zaim-train-8-all", entity="gcn-nas")
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -228,7 +226,6 @@ class Processor():
         #print(self.model)
         #num = sum(p.numel() for p in self.model.parameters())/1000/1000
         #print(num)
-        wandb.watch(self.model)
 
         self.loss = nn.CrossEntropyLoss().cuda(output_device)
 
@@ -387,9 +384,6 @@ class Processor():
             
             # self.train_writer.add_scalar('batch_time', process.iterable.last_duration, self.global_step)
             # if batch_idx % 10 == 0: # TODO: What should be the interval?
-            #     wandb.log({"loss" : loss.item()})
-            #     wandb.log({"acc" : acc})
-            #     wandb.log({"loss_l1" : l1})
             # statistics
             self.lr = self.optimizer.param_groups[0]['lr']
             # self.train_writer.add_scalar('lr', self.lr, self.global_step)
@@ -474,8 +468,6 @@ class Processor():
                 
             
             # self.lr_scheduler.step(loss)
-            wandb.log({"acc" : accuracy, "epoch" : epoch})
-            wandb.log({"loss" : loss, "epoch" : epoch})
             
             print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
             if self.arg.phase == 'train':
@@ -535,7 +527,6 @@ class Processor():
             end_time = time.time()
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
             # Store val_accuracy in architectures/generated_architectures.json
-            wandb.finish()
             # with open(f"{self.arg.save_path}/generated_architectures.json", 'r') as f:
             #     architectures = json.load(f)
             #     architectures[self.model_hash]["val_acc"] = self.best_acc

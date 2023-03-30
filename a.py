@@ -124,7 +124,7 @@ hashes = [
 
 for hash_value in hashes:
     # Define the command to run the sbatch job with the hash value
-    sbatch_cmd = f"sbatch --export=hash_value={hash_value} --job-name={hash_value} job.slurm"
+    sbatch_cmd = f"sbatch --export=hash_value={hash_value} --job-name={hash_value} --output=output/{hash_value}.out job.slurm"
 
     # Submit the sbatch job using subprocess
     subprocess.call(sbatch_cmd.split())

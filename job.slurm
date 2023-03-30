@@ -8,8 +8,8 @@
 #SBATCH --constraint="A100|V100"
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=4
-#SBATCH --job-name=train
-#SBATCH --output=train.out
+#SBATCH --job-name=hash
+#SBATCH --output=hash.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 #SBATCH --export=hash_value
@@ -39,12 +39,12 @@ pip install thop --user -q
 echo "Installing PyTorch"
 pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
 echo "Installing wandb"
-pip install wandb --user -q
+# pip install wandb --user -q
 
 echo "Logging in to wandb"
-wandb login a049ba80f44a62c306d6bed8249174b30801d69e
+# wandb login a049ba80f44a62c306d6bed8249174b30801d69e
 echo "Finished logging in to wandb"
 echo $hash_value
-python3 zaim.py --hash $hash_value
+python3 zaim.py --hash $hash_value --path "experiment"
 
 uname -a
