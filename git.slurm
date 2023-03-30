@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --partition=CPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=8:00:00
+#SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --mem=30G
@@ -23,12 +23,8 @@ echo “We are using $SLURM_CPUS_ON_NODE cores per node”
 echo “Total of $SLURM_NTASKS cores”
 
 module purge
+module load Python/3.8.6-GCCcore-10.2.0
+pip install -r requirements.txt --user -q
 
-echo "Adding"
-git add .
-echo "Commiting"
-git commit -m "runs"
-echo "Pushing"
-git pull
-
+python3 calculate_correlation_of_epochs.py
 uname -a

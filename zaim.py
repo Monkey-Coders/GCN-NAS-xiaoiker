@@ -59,7 +59,7 @@ if __name__ == "__main__":
     print("Running train_random_architectures.py")
     parser = get_parser()
     args = parser.parse_args()
-    model_hash = int(args.hash)
+    model_hash = str(args.hash)
     path = str(args.path)
     with open(f"{path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
@@ -91,6 +91,6 @@ if __name__ == "__main__":
         yaml.dump(config, f)
     # Sleep for 1 second
     time.sleep(2)
-    command = f"python3 main.py --config {path}/configs/{model_hash}.yaml"
+    command = f"python3 main_2.py --config {path}/configs/{model_hash}.yaml"
     print("Calling command: ", command)
     call(command, shell=True)

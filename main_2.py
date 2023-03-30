@@ -536,13 +536,13 @@ class Processor():
             print('best accuracy: ', self.best_acc, ' model_name: ', self.arg.model_saved_name)
             # Store val_accuracy in architectures/generated_architectures.json
             wandb.finish()
-            with open(f"{self.arg.save_path}/generated_architectures.json", 'r') as f:
-                architectures = json.load(f)
-                architectures[self.model_hash]["val_acc"] = self.best_acc
-                architectures[self.model_hash]["time"] = end_time - start_time 
+            # with open(f"{self.arg.save_path}/generated_architectures.json", 'r') as f:
+            #     architectures = json.load(f)
+            #     architectures[self.model_hash]["val_acc"] = self.best_acc
+            #     architectures[self.model_hash]["time"] = end_time - start_time 
             
-            with open(f"{self.arg.save_path}/generated_architectures.json", 'w') as f:
-                json.dump(architectures, f)
+            # with open(f"{self.arg.save_path}/generated_architectures.json", 'w') as f:
+            #     json.dump(architectures, f)
             
 
             
