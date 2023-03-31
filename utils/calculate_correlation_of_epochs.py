@@ -5,6 +5,7 @@ from ZeroCostFramework.utils.util_functions import get_proxies
 base_path = "experiment"
 
 epochs = ["zero_cost_scores"]
+
 for i in range(9):
     epochs.append(f"zero_cost_scores_{i+1}")
 
@@ -58,8 +59,3 @@ if __name__ == '__main__':
     plt.tight_layout()
     # Save
     plt.savefig(f'{base_path}/correlations.png')
-    
-
-
-        
-        

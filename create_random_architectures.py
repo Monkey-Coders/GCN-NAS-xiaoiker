@@ -1,5 +1,4 @@
 import numpy as np
-import torch
 from utils import import_class
 import json
 import hashlib
@@ -7,7 +6,8 @@ import argparse
 from tqdm import tqdm
 import os
 
-path = "architectures_10/generated_architectures.json"
+path = "architectures_10"
+path += "/generated_architectures.json"
 
 def get_model_hash(model):
     model_hash = hashlib.sha256(repr(model).encode()).hexdigest()
@@ -24,7 +24,6 @@ def generate_random_weights(layers, operations):
 
 
 def generate_model(weights):
-    eights = torch.tensor(weights)
 
     model_args = {
         'num_class': 60, 

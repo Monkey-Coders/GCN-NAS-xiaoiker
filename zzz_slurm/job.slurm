@@ -5,7 +5,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="A100|V100"
+#SBATCH --constraint="A100|V100|P100"
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=4
 #SBATCH --job-name=hash
@@ -13,6 +13,7 @@
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 #SBATCH --export=hash_value
+#SBATCH --export=start_epoch
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -45,6 +46,6 @@ echo "Logging in to wandb"
 # wandb login a049ba80f44a62c306d6bed8249174b30801d69e
 echo "Finished logging in to wandb"
 echo $hash_value
-python3 zaim.py --hash $hash_value --path "experiment"
+python3 zaim.py --hash $hash_value --path "experiment" --start_epoch $start_epoch
 
 uname -a

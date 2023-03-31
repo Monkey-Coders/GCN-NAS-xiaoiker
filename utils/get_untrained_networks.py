@@ -1,6 +1,8 @@
-import subprocess
 
-hashes = [
+import json
+import os
+
+hashish = [
 "4f1a471724603d9df405172472f4362466de7c40cae4c72bddee27da518036d0",
 "583edd66a52dfec2fcd814245d60157841cd36944627d5ef6428cb308802f22d",
 "639b362701548d238d3a38af27ea08e9c6a1faa4a995a617d858eb08085ad0c9",
@@ -122,9 +124,34 @@ hashes = [
 "ffa598d606cb6ab36b6992b8ce846f9d342eadad1a0eac7d0f8f5cfa712eef54",
 ]
 
-for hash_value in hashes:
-    # Define the command to run the sbatch job with the hash value
-    sbatch_cmd = f"sbatch --export=hash_value={hash_value} --job-name={hash_value} --output=output/{hash_value}.out job.slurm"
+path = "experiment"
 
-    # Submit the sbatch job using subprocess
-    subprocess.call(sbatch_cmd.split())
+with open(f"{path}/generated_architectures.json", "r") as f:
+    architectures = json.load(f)
+    
+
+# go through all the architectures and check how many .pt files there are for each architecture in the run folder.
+# get the epoch that they stopped on and if that epoch is less than 10, then add the zero cost scores to a list
+
+push = []
+for model_hash in architectures.keys():
+    print("Model hash: ", model_hash)
+    try:
+        pt_files = [f for f in os.listdir(f"{path}/run/{model_hash}") if f.endswith(".pt")]
+    except:
+        # with open(f"{path}/run_not_found.txt", "a") as f:
+        #     f.write(model_hash + "\n")
+        continue
+    if pt_files == []:
+        continue
+    # get the epoch that the model stopped on
+    epochs = [int(f.split("-")[1]) for f in pt_files]
+    max_epoch = max(epochs)
+    
+    # if the epoch is less than 10, then add the zero cost scores to a list
+    
+    if max_epoch < 9 and model_hash not in hashish:
+        push.append({"model_hash": model_hash, "max_epoch": max_epoch})
+        
+with open(f"{path}/run_not_found.txt", "w") as f:
+    f.write(str(push))

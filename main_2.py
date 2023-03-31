@@ -489,6 +489,8 @@ class Processor():
                     pickle.dump(score_dict, f)
             
     def start(self):
+        print("START EPOCH:")
+        print(self.arg.start_epoch)
         if self.arg.phase == 'train':
             self.print_log('Parameters:\n{}\n'.format(str(vars(self.arg))))
             self.global_step = self.arg.start_epoch * len(self.data_loader['train']) / self.arg.batch_size
