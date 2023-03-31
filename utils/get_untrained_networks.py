@@ -147,11 +147,12 @@ for model_hash in architectures.keys():
     # get the epoch that the model stopped on
     epochs = [int(f.split("-")[1]) for f in pt_files]
     max_epoch = max(epochs)
+    max_index = epochs.index(max_epoch)
     
     # if the epoch is less than 10, then add the zero cost scores to a list
     
     if max_epoch < 9 and model_hash not in hashish:
-        push.append({"model_hash": model_hash, "max_epoch": max_epoch})
+        push.append({"model_hash": model_hash, "max_epoch": max_epoch, "weights": f"{path}/run/{model_hash}/{pt_files[max_index]}"})
         
 with open(f"{path}/run_not_found.txt", "w") as f:
     f.write(str(push))

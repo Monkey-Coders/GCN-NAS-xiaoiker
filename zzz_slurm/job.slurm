@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=24:00:00
+#SBATCH --time=00:10:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --gres=gpu:1
@@ -14,6 +14,7 @@
 #SBATCH --mail-type=ALL
 #SBATCH --export=hash_value
 #SBATCH --export=start_epoch
+#SBATCH --export=weights
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -42,10 +43,9 @@ pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu1
 echo "Installing wandb"
 # pip install wandb --user -q
 
-echo "Logging in to wandb"
-# wandb login a049ba80f44a62c306d6bed8249174b30801d69e
-echo "Finished logging in to wandb"
 echo $hash_value
-python3 zaim.py --hash $hash_value --path "experiment" --start_epoch $start_epoch
+echo $start_epoch
+echo $weights
+python3 zaim.py --hash $hash_value --path "experiment" --start_epoch $start_epoch --weights $weights
 
 uname -a
