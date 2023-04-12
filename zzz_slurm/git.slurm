@@ -1,14 +1,13 @@
 #!/bin/sh
-#SBATCH --partition=GPUQ
+#SBATCH --partition=CPUQ
 #SBATCH --account=ie-idi
-#SBATCH --time=72:00:00
+#SBATCH --time=00:30:00
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --gres=gpu:A100m80:1
 #SBATCH --mem=30G
 #SBATCH --cpus-per-task=8
-#SBATCH --job-name=ZC
-#SBATCH --output=ZC.out
+#SBATCH --job-name=GIT
+#SBATCH --output=GIT.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
@@ -24,19 +23,8 @@ echo “We are using $SLURM_CPUS_ON_NODE cores per node”
 echo “Total of $SLURM_NTASKS cores”
 
 module purge
-module load Anaconda3/2020.07
 module load Python/3.8.6-GCCcore-10.2.0
-
-echo "Creating conda environment"
-conda env create -n promp -f environment.yml
-echo "Activating conda environment"
-conda activate zaim
-echo "Pip install requirements"
 pip install -r requirements.txt --user -q
-pip install thop --user -q
-echo "Installing PyTorch"
-pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
 
-python3 warmup.py
-
+python3 calculate_correlation_of_epochs.py
 uname -a

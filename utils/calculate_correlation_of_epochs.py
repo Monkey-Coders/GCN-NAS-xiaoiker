@@ -4,7 +4,10 @@ import matplotlib.pyplot as plt
 from ZeroCostFramework.utils.util_functions import get_proxies
 base_path = "experiment"
 
-epochs = ["zero_cost_scores", "zero_cost_scores_1", "zero_cost_scores_3", "zero_cost_scores_5", "zero_cost_scores_7", "zero_cost_scores_9"]
+epochs = ["zero_cost_scores"]
+
+for i in range(9):
+    epochs.append(f"zero_cost_scores_{i+1}")
 
 def validate_architecture(architecture, epoch):
     return all(format in architecture for format in ["val_acc", epoch])
@@ -50,13 +53,9 @@ if __name__ == '__main__':
             x.append(epoch_number)
             y.append(correlations[epoch][proxy])
         plt.plot(x, y, "-D", label=proxy, markevery=[0])
-    plt.legend()
+    plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
     plt.xlabel("Epoch")
     plt.ylabel("Spearman Correlation")
+    plt.tight_layout()
     # Save
     plt.savefig(f'{base_path}/correlations.png')
-    
-
-
-        
-        
