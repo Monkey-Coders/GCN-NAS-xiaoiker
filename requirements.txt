@@ -10,6 +10,7 @@ importlib-metadata==6.0.0
 Markdown==3.4.1
 MarkupSafe==2.1.2
 numpy==1.24.1
+matplotlib==3.7.1
 nvidia-cublas-cu11==11.10.3.66
 nvidia-cuda-nvrtc-cu11==11.7.99
 nvidia-cuda-runtime-cu11==11.7.99

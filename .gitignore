@@ -13,3 +13,4 @@ run/
 work_dir/
 runs/
 configs/
+model_data/

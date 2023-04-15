@@ -1,20 +1,16 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
-#SBATCH --account=ie-idi
-#SBATCH --time=00:10:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --account=share-ie-idi
+#SBATCH --time=48:20:00
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="A100|V100|P100"
+#SBATCH --constraint="A100"
 #SBATCH --mem=40G
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --job-name=hash
 #SBATCH --output=hash.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
-#SBATCH --export=hash_value
-#SBATCH --export=start_epoch
-#SBATCH --export=weights
+#SBATCH --export=model_hash,weights,start_epoch
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -40,12 +36,12 @@ pip install -r requirements.txt --user -q
 pip install thop --user -q
 echo "Installing PyTorch"
 pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
-echo "Installing wandb"
-# pip install wandb --user -q
 
-echo $hash_value
+echo $model_hash
 echo $start_epoch
 echo $weights
-python3 zaim.py --hash $hash_value --path "experiment" --start_epoch $start_epoch --weights $weights
-
+cp -r data model_data/$model_hash
+python3 zaim.py --hash $model_hash --path "architectures_10" --start_epoch $start_epoch --weights $weights
+python3 warmup.py --hash $model_hash --path "architectures_10"
+rm -rf model_data/$model_hash
 uname -a

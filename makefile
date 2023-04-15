@@ -1,14 +1,17 @@
 q:
 	squeue -u zuimran
 	
+qs:
+	squeue --start -u zuimran
+	
 r:
-	chmod u+x job.slurm && sbatch job.slurm
+	chmod u+x zzz_slurm/job.slurm && sbatch zzz_slurm/job.slurm
 
 z:
-	chmod u+x zc.slurm && sbatch zc.slurm
+	chmod u+x zzz_slurm/zc.slurm && sbatch zzz_slurm/zc.slurm
 
-g:
-	chmod u+x git.slurm && sbatch git.slurm
+c:
+	chmod u+x zzz_slurm/cpu.slurm && sbatch zzz_slurm/cpu.slurm
 
 s:
 	scancel $(id)

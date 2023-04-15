@@ -245,7 +245,7 @@ class Model(nn.Module):
             self.l10 = TCN_GCN_unit(256, 256, A, weights=weights[9])
             self.layers = [self.l1, self.l2, self.l3, self.l4, self.l5, self.l6, self.l7, self.l8, self.l9, self.l10]
         else:
-            raise ValueError('Invalid number of layers')
+            raise ValueError(f'Invalid number of layers: {len(weights)}')
         self.fc = nn.Linear(256, num_class)
         nn.init.normal(self.fc.weight, 0, math.sqrt(2. / num_class))
         bn_init(self.data_bn, 1)

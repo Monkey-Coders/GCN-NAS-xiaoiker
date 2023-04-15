@@ -1,3 +1,4 @@
+import argparse
 from collections import OrderedDict
 import pickle
 import shutil
@@ -60,6 +61,8 @@ def initialize_model(path, file_name):
     #print(model)
     
     # Find all files within the folder that ends with .pt
+    if file_name is None:
+        return model
     weights = torch.load(f"{path}/{file_name}")
         
     weights = OrderedDict(
@@ -99,41 +102,51 @@ if __name__ == "__main__":
     epochs = 10
 
 
-    base_path = "experiment"
+    parser = argparse.ArgumentParser(description="Train a model")
+    parser.add_argument("--hash", type=str, default="", required=True)
+    parser.add_argument("--path", type=str, default="experiment", required=False)
+    args = parser.parse_args()
+    model_hash = str(args.hash)
+    base_path = str(args.path)
+    
+    print("Model hash: ", model_hash)
+    try:
+        pt_files = [f for f in os.listdir(f"{base_path}/run/{model_hash}") if f.endswith(".pt")]
+    except:
+        with open(f"{base_path}/run_not_found.txt", "a") as f:
+            f.write(model_hash + "\n")
+                    
+        exit()
+        
+    pt_files.sort()
+    track_scores = {}
     
     with open(f"{base_path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
-        # Map over keys 
-        for model_hash in architectures.keys():
-            print("Model hash: ", model_hash)
-            try:
-                pt_files = [f for f in os.listdir(f"{base_path}/run/{model_hash}") if f.endswith(".pt")]
-            except:
-                with open(f"experiment/run_not_found.txt", "a") as f:
-                    f.write(model_hash + "\n")
-                            
-                continue
         
-            for file in pt_files:
-                epoch = int(file.split("-")[1]) 
-                if epoch > 10:
-                    continue
-                try:
-                    scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
-                except Exception as e:
-                    print(f"Error: {e}")
-                    continue
-                print(f"Epoch: {epoch}")
-                print(scores)
+    if "zero_cost_scores" not in architectures[model_hash]:
+        print(f"Calculating zero cost scores for epoch {-1}...")
+        
+        scores = get_zc_scores(f"{base_path}/run/{model_hash}", None)
+        track_scores[f"zero_cost_scores"] = scores
+    
+    for file in pt_files:
+        epoch = int(file.split("-")[1]) 
+        if epoch > 9:
+            continue
+        if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
+            continue
+        print(f"Calculating zero cost scores for epoch {epoch}...")
+        try:
+            scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
+        except Exception as e:
+            print(f"Error: {e}")
+            continue
+        track_scores[f"zero_cost_scores_{epoch}"] = scores
 
-                
-                with open(f"experiment/generated_architectures.json", "r") as f:
-                    results = json.load(f)
-                    print(f"Adding zero cost scores for epoch {epoch}")
-                    if f"zero_cost_scores_{epoch}" not in results[model_hash]:
-                        results[model_hash][f"zero_cost_scores_{epoch}"] = scores
-                    else:
-                        results[model_hash][f"zero_cost_scores_{epoch}"] = {**architectures[model_hash][f"zero_cost_scores_{epoch}"], **scores}
-                    with open(f"experiment/generated_architectures.json", "w") as f:
-                        json.dump(results, f)
 
+    with open(f"{base_path}/generated_architectures.json", "r") as f:
+        architectures = json.load(f)
+    architectures[model_hash] = {**architectures[model_hash], **track_scores}
+    with open(f"{base_path}/generated_architectures.json", "w") as f:
+        json.dump(architectures, f)

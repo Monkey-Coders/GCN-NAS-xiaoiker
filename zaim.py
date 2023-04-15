@@ -41,7 +41,7 @@ default_configs = {
     "device": [0],
     "batch_size": 40,
     "test_batch_size": 20,
-    "num_epoch": 10,
+    "num_epoch": 70,
     "nesterov": True,
 }
 
@@ -50,8 +50,8 @@ def get_parser():
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--hash", type=str, default="", required=False)
     parser.add_argument("--path", type=str, default="experiment", required=False)
-    parser.add_argument("--weights", type=str, default="", required=False)
-    parser.add_argument("--start_epoch", type=str, default="", required=False)
+    parser.add_argument("--start_epoch", type=str, default="None", required=False)
+    parser.add_argument("--weights", type=str, default="None", required=False)
     return parser
 
 
@@ -63,8 +63,8 @@ if __name__ == "__main__":
     args = parser.parse_args()
     model_hash = str(args.hash)
     path = str(args.path)
-    weights = str(args.weights)
     start_epoch = str(args.start_epoch)
+    weights = str(args.weights)
     with open(f"{path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
     # Loop through the dictionary of architectures
@@ -78,15 +78,17 @@ if __name__ == "__main__":
 
     # Create a config file
     config = default_configs
-    if weights != "":
-        config["model_args"]["weights"] = weights
-    else:
-        config["model_args"]["weights"] = model["weights"]
+
+    config["model_args"]["weights"] = model["weights"]
         
     config["model"] = "model.dynamic_model.Model"
     config["work_dir"] = f"{path}/run/{model_hash}/work_dir"
     config["model_saved_name"] = f"{path}/run/{model_hash}/runs"
     config["model_hash"] = model_hash
+    config["train_feeder_args"]["data_path"] = f"./model_data/{model_hash}/ntu/xview/train_data_joint.npy"
+    config["train_feeder_args"]["label_path"] = f"./model_data/{model_hash}/ntu/xview/train_label.pkl"
+    config["test_feeder_args"]["data_path"] = f"./model_data/{model_hash}/ntu/xview/val_data_joint.npy"
+    config["test_feeder_args"]["label_path"] = f"./model_data/{model_hash}/ntu/xview/val_label.pkl"
     config["save_path"] = path
     # Save the config file as a yaml file in the work_dir
     # Create folder architectures/configs if it does not exist
@@ -97,8 +99,11 @@ if __name__ == "__main__":
         yaml.dump(config, f)
     # Sleep for 1 second
     time.sleep(2)
-    command = f"python3 main_2.py --config {path}/configs/{model_hash}.yaml"
-    if start_epoch != "":
+    command = f"python3 main.py --config {path}/configs/{model_hash}.yaml"
+    if start_epoch != "None":
         command += f" --start-epoch {start_epoch}"
+    if weights != "None":
+        command += f" --weights {weights}"
+    
     print("Calling command: ", command)
     call(command, shell=True)

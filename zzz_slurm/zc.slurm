@@ -1,17 +1,16 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
-#SBATCH --account=ie-idi
-#SBATCH --time=5:00:00
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=1
+#SBATCH --account=share-ie-idi
+#SBATCH --time=00:20:00
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="V100|P100|A100"
-#SBATCH --mem=30G
+#SBATCH --constraint="A100"
+#SBATCH --mem=40G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=ZC
-#SBATCH --output=ZC.out
+#SBATCH --output=output/ZC.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
+#SBATCH --export=model_hash
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -38,6 +37,13 @@ pip install thop --user -q
 echo "Installing PyTorch"
 pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
 
-python3 warmup.py
-
+echo "Creating model_data directory"
+mkdir model_data
+echo "Copying data to model_data directory"
+cp -r data model_data/$model_hash
+echo "Running warmup.py"
+python3 warmup.py --hash $model_hash
+echo "Deleting model_data directory"
+rm -rf model_data/$model_hash
+echo "Finished!!"
 uname -a
