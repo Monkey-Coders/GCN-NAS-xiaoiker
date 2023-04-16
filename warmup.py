@@ -82,7 +82,7 @@ def initialize_model(path, file_name):
         return None
 
     
-def get_zc_scores(path, file_name):
+def get_zc_scores(path, file_name, overide = []):
     model = initialize_model(path, file_name)
     if model is None:
         raise Exception("Model is None")
@@ -90,25 +90,27 @@ def get_zc_scores(path, file_name):
     config = get_config(path)
     device = config["device"][0]
     loss_function = nn.CrossEntropyLoss().cuda(device)
-    save_path = "test"
+    overide = overide
 
-    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, save_path)
+    scores = calculate_zc_proxy_scores(model, data_loader, device, loss_function, overide)
     return scores
 
 
 
 if __name__ == "__main__":
-
     epochs = 10
-
-
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--hash", type=str, default="", required=True)
     parser.add_argument("--path", type=str, default="experiment", required=False)
+    parser.add_argument("--overide", type=str, default="", required=False)
     args = parser.parse_args()
     model_hash = str(args.hash)
     base_path = str(args.path)
-    
+    overide_arg = str(args.overide)
+    if overide_arg == "":
+        overide_arg = []
+    else:
+        overide_arg = overide_arg.split("|")
     print("Model hash: ", model_hash)
     try:
         pt_files = [f for f in os.listdir(f"{base_path}/run/{model_hash}") if f.endswith(".pt")]
@@ -124,21 +126,21 @@ if __name__ == "__main__":
     with open(f"{base_path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
         
-    if "zero_cost_scores" not in architectures[model_hash]:
-        print(f"Calculating zero cost scores for epoch {-1}...")
+    # if "zero_cost_scores" not in architectures[model_hash]:
+    print(f"Calculating zero cost scores for epoch {-1}...")
         
-        scores = get_zc_scores(f"{base_path}/run/{model_hash}", None)
-        track_scores[f"zero_cost_scores"] = scores
+    scores = get_zc_scores(f"{base_path}/run/{model_hash}", None, overide_arg)
+    track_scores[f"zero_cost_scores"] = scores
     
     for file in pt_files:
         epoch = int(file.split("-")[1]) 
         if epoch > 9:
             continue
-        if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
-            continue
+        # if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
+        #     continue
         print(f"Calculating zero cost scores for epoch {epoch}...")
         try:
-            scores = get_zc_scores(f"{base_path}/run/{model_hash}", file)
+            scores = get_zc_scores(f"{base_path}/run/{model_hash}", file, overide_arg)
         except Exception as e:
             print(f"Error: {e}")
             continue
@@ -147,6 +149,12 @@ if __name__ == "__main__":
 
     with open(f"{base_path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
-    architectures[model_hash] = {**architectures[model_hash], **track_scores}
+    temp_archi_dict = architectures[model_hash]
+    for key in track_scores:
+        try:
+            temp_archi_dict[key] = {**architectures[model_hash][key], **track_scores[key]}
+        except:
+            temp_archi_dict[key] = track_scores[key]
+    architectures[model_hash] = temp_archi_dict
     with open(f"{base_path}/generated_architectures.json", "w") as f:
         json.dump(architectures, f)

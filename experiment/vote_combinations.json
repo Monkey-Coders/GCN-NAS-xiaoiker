@@ -1,0 +1,13 @@
+{
+    "(zero_cost_scores.synflow, zero_cost_scores_6.jacov, zero_cost_scores_6.zen)": 0.6427053640839596,
+    "(zero_cost_scores.synflow, zero_cost_scores_6.jacov, zero_cost_scores.zen)": 0.6421093547551179,
+    "(zero_cost_scores_6.plain, zero_cost_scores_0.l2_norm, zero_cost_scores_6.zen)": 0.6418761337133972, 
+    "(zero_cost_scores.synflow, zero_cost_scores_6.jacov, zero_cost_scores_8.zen)": 0.6417983933661571, 
+    "(zero_cost_scores.synflow, zero_cost_scores_6.jacov, zero_cost_scores_0.zen)": 0.6415651723244363, 
+    "(zero_cost_scores.synflow, zero_cost_scores_6.jacov, zero_cost_scores_3.zen)": 0.6415651723244363, 
+    "(zero_cost_scores_6.plain, zero_cost_scores_2.l2_norm, zero_cost_scores_6.zen)": 0.6414615185281161, 
+    "(zero_cost_scores_8.plain, zero_cost_scores.synflow, zero_cost_scores.zen)": 0.6411505571391553, 
+    "(zero_cost_scores_6.plain, zero_cost_scores_1.l2_norm, zero_cost_scores_6.zen)": 0.6409950764446748, 
+    "(zero_cost_scores_6.plain, zero_cost_scores.synflow, zero_cost_scores_6.zen)": 0.6408914226483545, 
+    "(zero_cost_scores_8.plain, zero_cost_scores.synflow, zero_cost_scores_6.zen)": 0.6407359419538741
+}
