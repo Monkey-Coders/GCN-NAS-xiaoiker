@@ -17,7 +17,7 @@ s:
 	scancel $(id)
 
 sa:
-	scancel -u zuimran -p GPUQ
+	scancel -u zuimran
 
 t:
 	tail -f -n 1 GCN-NAS.out 

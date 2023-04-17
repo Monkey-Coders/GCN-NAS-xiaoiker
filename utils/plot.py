@@ -97,7 +97,6 @@ def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles):
 if __name__ == '__main__':
     path = "experiment"
     data = load_data(path)
-    epoch = "zero_cost_scores"
     score_colors = {
         "plain": "blue",
         "params": "red",
@@ -136,8 +135,12 @@ if __name__ == '__main__':
         8: "olive",
         10: "magenta"
     }
+    epochs = ["zero_cost_scores"]
+    for i in range(10):
+        epochs.append(f"zero_cost_scores_{i}")
     
-    os.makedirs(f"{path}/plot/{epoch}", exist_ok=True)
-    plot_scores(path, data, weight_colors, score_colors, score_markers, epoch)
+    for epoch in epochs:
+        os.makedirs(f"{path}/plot/{epoch}", exist_ok=True)
+        plot_scores(path, data, weight_colors, score_colors, score_markers, epoch)
 
 

@@ -5,7 +5,7 @@
 #SBATCH --mem=80G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=CPU
-#SBATCH --output=CPU1.out
+#SBATCH --output=CPU.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
@@ -24,7 +24,7 @@ module purge
 module load Python/3.8.6-GCCcore-10.2.0
 pip install -r requirements.txt --user -q
 
-# python3 calculate_correlation_of_epochs.py
-# python3 ZeroCostFramework/calculate_vote.py
+python3 ZeroCostFramework/calculate_correlation_of_epochs.py
 python3 utils/plot.py
+python3 ZeroCostFramework/calculate_vote.py
 uname -a
