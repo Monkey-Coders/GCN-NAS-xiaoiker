@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=share-ie-idi
-#SBATCH --time=00:05:00
+#SBATCH --time=00:15:00
 #SBATCH --gres=gpu:1
 #SBATCH --constraint="A100"
 #SBATCH --mem=40G
@@ -42,7 +42,7 @@ mkdir model_data
 echo "Copying data to model_data directory"
 cp -r data model_data/$model_hash
 echo "Running warmup.py"
-python3 warmup.py --hash $model_hash --overide $overide
+python3 warmup.py --hash $model_hash
 echo "Deleting model_data directory"
 rm -rf model_data/$model_hash
 echo "Finished!!"

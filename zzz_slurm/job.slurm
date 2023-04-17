@@ -43,5 +43,7 @@ echo $weights
 cp -r data model_data/$model_hash
 python3 zaim.py --hash $model_hash --path "architectures_10" --start_epoch $start_epoch --weights $weights
 python3 warmup.py --hash $model_hash --path "architectures_10"
+sleep 10
+python3 warmup.py --hash $model_hash --path "architectures_10" --overide "epe_nas|grad_sign"
 rm -rf model_data/$model_hash
 uname -a

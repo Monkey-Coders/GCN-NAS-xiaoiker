@@ -27,4 +27,5 @@ pip install -r requirements.txt --user -q
 python3 ZeroCostFramework/calculate_correlation_of_epochs.py
 python3 utils/plot.py
 python3 ZeroCostFramework/calculate_vote.py
+
 uname -a

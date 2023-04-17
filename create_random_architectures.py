@@ -3,11 +3,9 @@ from utils import import_class
 import json
 import hashlib
 import argparse
-from tqdm import tqdm
 import os
 
 path = "architectures_10"
-path += "/generated_architectures.json"
 
 def get_model_hash(model):
     model_hash = hashlib.sha256(repr(model).encode()).hexdigest()
@@ -46,7 +44,7 @@ def generate_model(weights):
 def store_model(model, weights):
     model_hash = get_model_hash(model)
     try:
-        with open(path, "r") as f:
+        with open(f"{path}/generated_architectures.json", "r") as f:
             architectures = json.load(f)
     except FileNotFoundError:
         architectures = {}
@@ -56,14 +54,14 @@ def store_model(model, weights):
         architectures[model_hash] = {
             "weights": weights.tolist(),
         }
-        with open(path, "w") as f:
+        with open(f"{path}/generated_architectures.json", "w") as f:
             json.dump(architectures, f)
     else:
         print("Model already exists")
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument("--architectures", type=int, default=50)
+parser.add_argument("--architectures", type=int, default=80)
 parser.add_argument("--layers", type=int, default=10)
 parser.add_argument("--operations", type=int, default=8)
 
@@ -78,7 +76,7 @@ if __name__ == "__main__":
         with open(path, "w") as f:
             json.dump({}, f)
     print(f"Starting to generate {architectures} random architectures")
-    for i in tqdm(range(architectures)):
+    for i in (range(architectures)):
         weights = generate_random_weights(layers, operations)
         model = generate_model(weights)
         store_model(model, weights)

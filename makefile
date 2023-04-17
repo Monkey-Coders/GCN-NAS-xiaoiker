@@ -7,6 +7,9 @@ qs:
 r:
 	chmod u+x zzz_slurm/job.slurm && sbatch zzz_slurm/job.slurm
 
+t:
+	chmod u+x zzz_slurm/task.slurm && sbatch zzz_slurm/task.slurm
+
 z:
 	chmod u+x zzz_slurm/zc.slurm && sbatch zzz_slurm/zc.slurm
 
@@ -17,10 +20,7 @@ s:
 	scancel $(id)
 
 sa:
-	scancel -u zuimran
-
-t:
-	tail -f -n 1 GCN-NAS.out 
+	scancel -u zuimran -p GPUQ
 
 gpu:
 	nvidia-smi
