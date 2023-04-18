@@ -1,9 +1,8 @@
 #!/bin/sh
 #SBATCH --partition=CPUQ
 #SBATCH --account=share-ie-idi
-#SBATCH --time=13:00:00
-#SBATCH --mem=80G
-#SBATCH --cpus-per-task=8
+#SBATCH --time=00:05:00
+#SBATCH --mem=40G
 #SBATCH --job-name=CPU
 #SBATCH --output=CPU.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
