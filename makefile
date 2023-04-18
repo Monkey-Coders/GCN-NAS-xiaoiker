@@ -1,5 +1,11 @@
 q:
 	squeue -u zuimran
+
+qg:
+	squeue -u zuimran -p GPUQ
+
+qc:
+	squeue -u zuimran -p CPUQ
 	
 qs:
 	squeue --start -u zuimran

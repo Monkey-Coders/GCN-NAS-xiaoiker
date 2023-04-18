@@ -9,11 +9,6 @@ def load_data(path):
     with open(f'{path}/generated_architectures.json') as f:
         return json.load(f)
 
-def normalize(lst):
-    mx = max(lst)
-    mn = min(lst)
-    return (mx - mn)
-
 def create_legend(weight_colors):
     handles = []
     for size, c in weight_colors.items():
@@ -28,6 +23,8 @@ def plot_scores(path, data, weight_colors, score_colors, score_markers, epoch):
     colors = []
 
     for (model_hash, model) in data.items():
+        # if len(model["weights"]) != 10:
+        #     continue
         if epoch not in model:
             continue
         val_acc.append(model["val_acc"])
@@ -36,19 +33,18 @@ def plot_scores(path, data, weight_colors, score_colors, score_markers, epoch):
             zc_scores[score].append(float(model[epoch][score]["score"]) if model[epoch][score]["score"] != "Nan" else float("nan"))
 
     for (method, zc_score) in zc_scores.items():
-        nmz = normalize(zc_score)
-        normalized[method] = [zc_s / nmz for zc_s in zc_score]
+        normalized[method] = [(float(i)-min(zc_score))/(max(zc_score)-min(zc_score)) for i in zc_score]
 
     ncols = 4
     nrows = math.ceil(len(scores) / ncols)
     handles = create_legend(weight_colors)
 
-    plot_all_in_one("all_in_one", path, scores, val_acc, normalized, score_colors)
+    plot_all_in_one("all_in_one", path, scores, val_acc, normalized, score_colors, score_markers)
     
     proxies = ["flops", "jacov", "zen"]
-    plot_vote("vote", path, val_acc, normalized, proxies, colors, handles)
-    plot_proxies("zc_proxies", path, scores, nrows, ncols, val_acc, zc_scores, colors, handles)
-    plot_proxies("normalized", path, scores, nrows, ncols, val_acc, normalized, colors, handles)
+    plot_vote("vote", path, val_acc, normalized, proxies, colors, handles, score_markers)
+    plot_proxies("zc_proxies", path, scores, nrows, ncols, val_acc, zc_scores, colors, handles, score_markers)
+    plot_proxies("normalized", path, scores, nrows, ncols, val_acc, normalized, colors, handles, score_markers)
 
 def plot_proxies(filename, path, scores, nrows, ncols, val_acc, scores_data, colors, handles):
     plt.clf()
@@ -66,10 +62,10 @@ def plot_proxies(filename, path, scores, nrows, ncols, val_acc, scores_data, col
     fig.tight_layout(pad=2.0)
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
-def plot_all_in_one(filename, path, scores, val_acc, normalized, score_colors):
+def plot_all_in_one(filename, path, scores, val_acc, normalized, score_colors, score_markers):
     plt.clf()
     plt.cla()
-    plots = {score: plt.scatter(val_acc, normalized[score], marker='o', color=score_colors[score]) for i, score in enumerate(scores)}
+    plots = {score: plt.scatter(val_acc, normalized[score], color=score_colors[score]) for i, score in enumerate(scores)}
 
     plt.legend(plots.values(), plots.keys(), loc='upper right')
     plt.xlabel('val_acc')
@@ -77,14 +73,12 @@ def plot_all_in_one(filename, path, scores, val_acc, normalized, score_colors):
     plt.rcParams["figure.figsize"] = (20, 20)
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
-def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles):
+def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles, score_markers):
     plt.clf()
     plt.cla()
-    vote = [normalized[p] for p in proxies]
-    y = np.average(vote, axis=0)
-
-    for i in range(len(val_acc)):
-        plt.scatter(val_acc[i], y[i], color=colors[i])
+    for p in proxies:
+        for i in range(len(val_acc)):
+            plt.scatter(val_acc[i], normalized[p][i], color=colors[i])
     plt.xlabel('val_acc')
     plt.ylabel('vote')
     plt.title(f"{proxies}")
@@ -97,6 +91,7 @@ def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles):
 if __name__ == '__main__':
     path = "experiment"
     data = load_data(path)
+    
     score_colors = {
         "plain": "blue",
         "params": "red",
@@ -116,7 +111,7 @@ if __name__ == '__main__':
     score_markers = {
         "plain": "o",
         "params": "x",
-        "flops": "-",
+        "flops": "_",
         "synflow": "s",
         "snip": "p",
         "grad_norm": "P",
@@ -136,8 +131,8 @@ if __name__ == '__main__':
         10: "magenta"
     }
     epochs = ["zero_cost_scores"]
-    for i in range(10):
-        epochs.append(f"zero_cost_scores_{i}")
+    # for i in range(10):
+    #     epochs.append(f"zero_cost_scores_{i}")
     
     for epoch in epochs:
         os.makedirs(f"{path}/plot/{epoch}", exist_ok=True)
