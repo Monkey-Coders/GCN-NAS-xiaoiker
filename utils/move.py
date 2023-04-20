@@ -1,7 +1,7 @@
 import json
 from distutils.dir_util import copy_tree
 import os
-
+from tqdm import tqdm
 import yaml
 
 from_path = "architectures_10"
@@ -23,7 +23,7 @@ with open(f"{from_path}/generated_architectures.json", "r") as f:
 with open(f"{to_path}/generated_architectures.json", "r") as f:
     to_architectures = json.load(f)
     
-for model_hash, model in from_architectures.copy().items():
+for model_hash, model in tqdm(from_architectures.copy().items()):
     if "val_acc" in model:
         if model_hash not in to_architectures:        
             try:

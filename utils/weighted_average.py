@@ -56,10 +56,10 @@ def calculate_correlation(val_acc, normalized, scores):
             _d[score] = normalized[score][i]
         _data.append(_d)
 
-    df = pd.DataFrame(_data)
-    corr_matrix = df.corr()
-    dict_corr_matrix = dict(corr_matrix["val_acc"])
-    return dict_corr_matrix
+    corr_matrix = {}
+    for score in scores:
+        corr_matrix[score] = scipy.stats.spearmanr(_data[score], val_acc)
+    return corr_matrix
 
 def wa_func(val_acc, normalized, scores, corr_matrix):
     """# Weighted Average"""
@@ -72,8 +72,8 @@ def wa_func(val_acc, normalized, scores, corr_matrix):
         wa = 0
         weighted_sum = 0
         for score in scores:
-            wa += normalized[score][i] * corr_matrix[score]
-            weighted_sum += corr_matrix[score]
+            wa += normalized[score][i] * math.abs(corr_matrix[score])
+            weighted_sum += math.abs(corr_matrix[score])
         wa /= weighted_sum
         weighted_average.append(wa)
     return weighted_average

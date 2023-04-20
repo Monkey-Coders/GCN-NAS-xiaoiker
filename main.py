@@ -22,7 +22,7 @@ import torch.backends.cudnn as cudnn
 import wandb
 import json
 
-wandb.init(project="zaim-train-8-all", entity="gcn-nas")
+wandb.init(project="zaim-train-10-all", entity="gcn-nas")
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -473,9 +473,7 @@ class Processor():
                 self.best_loss = loss
                 
             
-            # self.lr_scheduler.step(loss)
-            wandb.log({"acc" : accuracy, "epoch" : epoch})
-            wandb.log({"loss" : loss, "epoch" : epoch})
+            wandb.log({"acc" : accuracy, "epoch" : epoch, "loss" : loss})
             
             print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
             if self.arg.phase == 'train':

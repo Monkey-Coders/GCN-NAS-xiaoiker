@@ -23,9 +23,10 @@ module purge
 module load Python/3.8.6-GCCcore-10.2.0
 pip install -r requirements.txt --user -q
 
+# python3 utils/move.py
 python3 utils/weighted_average.py
-# python3 ZeroCostFramework/calculate_correlation_of_epochs.py
-# python3 utils/plot.py
-# python3 ZeroCostFramework/calculate_vote.py
+python3 ZeroCostFramework/calculate_correlation_of_epochs.py
+python3 utils/plot.py
+python3 ZeroCostFramework/calculate_vote.py
 
 uname -a
