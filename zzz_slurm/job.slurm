@@ -10,7 +10,7 @@
 #SBATCH --output=hash.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
-#SBATCH --export=model_hash,weights,start_epoch
+#SBATCH --export=model_hash,weights,start_epoch,path
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -41,9 +41,9 @@ echo $model_hash
 echo $start_epoch
 echo $weights
 cp -r data model_data/$model_hash
-python3 zaim.py --hash $model_hash --path "architectures_10" --start_epoch $start_epoch --weights $weights
-python3 warmup.py --hash $model_hash --path "architectures_10"
+python3 zaim.py --hash $model_hash --path $path --start_epoch $start_epoch --weights $weights
+python3 warmup.py --hash $model_hash --path $path
 sleep 10
-python3 warmup.py --hash $model_hash --path "architectures_10" --overide "epe_nas|grad_sign"
+python3 warmup.py --hash $model_hash --path $path --overide "epe_nas|grad_sign"
 rm -rf model_data/$model_hash
 uname -a

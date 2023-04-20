@@ -5,7 +5,6 @@ import hashlib
 import argparse
 import os
 
-path = "architectures_10"
 
 def get_model_hash(model):
     model_hash = hashlib.sha256(repr(model).encode()).hexdigest()
@@ -71,6 +70,8 @@ if __name__ == "__main__":
     architectures = args.architectures
     layers = args.layers
     operations = args.operations
+    path = f"architectures_{layers}"
+    
     if not os.path.exists(path):
         os.makedirs(os.path.dirname(path), exist_ok=True)
         with open(path, "w") as f:
