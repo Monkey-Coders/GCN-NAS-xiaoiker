@@ -3,7 +3,7 @@ import subprocess
 
 
 
-for i in [4, 6, 8, 10]:
+for i in [8, 10]:
     path = f"architectures_{i}"
     with open(f"{path}/generated_architectures.json", "r") as f:
         archis = json.load(f)

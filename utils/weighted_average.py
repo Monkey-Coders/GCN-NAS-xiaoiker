@@ -58,7 +58,7 @@ def calculate_correlation(val_acc, normalized, scores):
 
     corr_matrix = {}
     for score in scores:
-        corr_matrix[score] = scipy.stats.spearmanr(_data[score], val_acc)
+        corr_matrix[score] = scipy.stats.spearmanr([obj[score] for obj in _data], val_acc)
     return corr_matrix
 
 def wa_func(val_acc, normalized, scores, corr_matrix):

@@ -1,7 +1,7 @@
 #!/bin/sh
 #SBATCH --partition=CPUQ
 #SBATCH --account=share-ie-idi
-#SBATCH --time=00:05:00
+#SBATCH --time=00:15:00
 #SBATCH --mem=40G
 #SBATCH --job-name=CPU
 #SBATCH --output=CPU.out
@@ -23,10 +23,12 @@ module purge
 module load Python/3.8.6-GCCcore-10.2.0
 pip install -r requirements.txt --user -q
 
+
+zip -r run.zip experiment/run
 # python3 utils/move.py
-python3 utils/weighted_average.py
-python3 ZeroCostFramework/calculate_correlation_of_epochs.py
-python3 utils/plot.py
-python3 ZeroCostFramework/calculate_vote.py
+# python3 utils/weighted_average.py
+# python3 ZeroCostFramework/calculate_correlation_of_epochs.py
+# python3 utils/plot.py
+# python3 ZeroCostFramework/calculate_vote.py
 
 uname -a

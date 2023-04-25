@@ -22,7 +22,7 @@ import torch.backends.cudnn as cudnn
 import wandb
 import json
 
-wandb.init(project="zaim-train-10-all", entity="gcn-nas")
+# wandb.init(project="zaim-train-10-all-new", entity="gcn-nas")
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -162,11 +162,10 @@ def get_parser():
         help='weight decay for optimizer')
     parser.add_argument('--only_train_part', default=False)
     parser.add_argument('--only_train_epoch', default=0)
-    parser.add_argument('--warm_up_epoch', default=0)
+    parser.add_argument('--warm_up_epoch', default=30)
     parser.add_argument('--model_hash', default="")
     parser.add_argument('--save_path', default="architectures")
     return parser
-
 
 class Processor():
     """ 
@@ -410,6 +409,7 @@ class Processor():
             '\tTime consumption: [Data]{dataloader}, [Network]{model}'.format(
                 **proportion))
 
+        wandb.log({"train_acc" : acc, "train_epoch" : epoch, "epoch" : epoch, "train_loss" : loss})
         if save_model or epoch < 10:
             state_dict = self.model.state_dict()
             weights = OrderedDict([[k.split('module.')[-1],
@@ -473,7 +473,7 @@ class Processor():
                 self.best_loss = loss
                 
             
-            wandb.log({"acc" : accuracy, "epoch" : epoch, "loss" : loss})
+            wandb.log({"val_acc" : accuracy, "val_epoch" : epoch, "epoch" : epoch, "val_loss" : loss})
             
             print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
             if self.arg.phase == 'train':
@@ -522,8 +522,8 @@ class Processor():
                 else:
                     early_stop += 1
                 
-                if early_stop > 5:
-                    print("There was no improvement in the last 5 epochs. Stopping training.")
+                if early_stop > 10 and epoch > 30:
+                    print("There was no improvement in the last 10 epochs. Stopping training.")
                     break
                 # end_time_epoch = time.time()
                 # print(f"Epoch: {epoch+1} took {end_time_epoch - start_time_epoch} seconds.")
@@ -593,6 +593,8 @@ if __name__ == '__main__':
         parser.set_defaults(**default_arg)
 
     arg = parser.parse_args()
+    wandb.init(project="zaim-train-10-all-new", entity="gcn-nas", name=arg.model_hash)
+    
     init_seed(0)
     processor = Processor(arg)
     processor.start()

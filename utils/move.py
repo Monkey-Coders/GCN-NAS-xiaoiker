@@ -1,11 +1,21 @@
 import json
 from distutils.dir_util import copy_tree
 import os
+import numpy as np
 from tqdm import tqdm
 import yaml
 
-from_path = "architectures_10"
+from_path = "architectures_8"
 to_path = "experiment"
+
+def has_nan(d):
+    for k, v in d.items():
+        if isinstance(v, dict):
+            if has_nan(v):
+                return True
+        elif isinstance(v, float) and float(v) == float('nan'):
+            return True
+    return False
 
 def fix_config(to_path, model_hash):
     with open(f"{to_path}/run/{model_hash}/work_dir/config.yaml", "r") as f:
@@ -25,7 +35,9 @@ with open(f"{to_path}/generated_architectures.json", "r") as f:
     
 for model_hash, model in tqdm(from_architectures.copy().items()):
     if "val_acc" in model:
-        if model_hash not in to_architectures:        
+        if model_hash not in to_architectures:    
+            if has_nan(model):
+                continue
             try:
                 copy_tree(f"{from_path}/run/{model_hash}", f"{to_path}/run/{model_hash}")
                 fix_config(to_path, model_hash)
