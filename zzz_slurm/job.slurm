@@ -25,12 +25,15 @@ echo “Total of $SLURM_NTASKS cores”
 
 module purge
 module load Anaconda3/2020.07
-module load Python/3.8.6-GCCcore-10.2.0
+module load Python/3.9.6-GCCcore-11.2.0
 
-echo "Creating conda environment"
-conda env create -n promp -f environment.yml
-echo "Activating conda environment"
-conda activate zaim
+# echo "Creating conda environment"
+# conda env create -n promp
+# echo "Activating conda environment"
+# eval "$(conda shell.bash hook)"
+# conda activate promp
+# conda update -n base -c defaults conda
+# conda update --all
 echo "Pip install requirements"
 pip install -r requirements.txt --user -q
 pip install thop --user -q
@@ -40,10 +43,8 @@ pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu1
 echo $model_hash
 echo $start_epoch
 echo $weights
+wandb login a049ba80f44a62c306d6bed8249174b30801d69e
 cp -r data model_data/$model_hash
 python3 zaim.py --hash $model_hash --path $path --start_epoch $start_epoch --weights $weights
-python3 warmup.py --hash $model_hash --path $path
-sleep 10
-python3 warmup.py --hash $model_hash --path $path --overide "epe_nas|grad_sign"
 rm -rf model_data/$model_hash
 uname -a

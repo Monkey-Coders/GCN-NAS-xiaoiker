@@ -1,4 +1,3 @@
-name: zaim
 dependencies:
 - python==3.9
 - pip
@@ -42,5 +41,7 @@ dependencies:
   - Werkzeug==2.2.2
   - wheel==0.38.4
   - wandb
+  - appdirs
+  - click==8.1.3
   - zipp==3.12.0
 

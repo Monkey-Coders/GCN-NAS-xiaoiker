@@ -56,3 +56,13 @@ python gcn_search.py --config ./config/nturgbd-cross-view/search_joint.yaml
 
 ## License
 All materials in this repository are released under the Apache License 2.0.
+
+ssh feidebrukernavn@idun-login2.hpc.ntnu.no
+
+setfacl -q -R -m user:salara:rwx zuimran
+chmod a+rwx zuimran
+getfacl zuimran
+
+cd ~/../zuimran/GCN-NAS/GCN-NAS-xiaoiker/
+sbatch zzz_slurm/install.slurm
+python3 utils/start_sbatch.py

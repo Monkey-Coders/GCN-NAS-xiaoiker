@@ -58,7 +58,7 @@ def get_parser():
 
 if __name__ == "__main__":
     # Get the architectures from the path
-    print("Running train_random_architectures.py")
+    print("Running zaim.py")
     parser = get_parser()
     args = parser.parse_args()
     model_hash = str(args.hash)
@@ -104,6 +104,8 @@ if __name__ == "__main__":
         command += f" --start-epoch {start_epoch}"
     if weights != "None":
         command += f" --weights {weights}"
+    if path == "experiment":
+        command += f" --wbname {path}"
     
     print("Calling command: ", command)
     call(command, shell=True)

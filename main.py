@@ -13,7 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
-from tensorboardX import SummaryWriter
+# from tensorboardX import SummaryWriter
 import shutil
 from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
 import random
@@ -165,6 +165,7 @@ def get_parser():
     parser.add_argument('--warm_up_epoch', default=30)
     parser.add_argument('--model_hash', default="")
     parser.add_argument('--save_path', default="architectures")
+    parser.add_argument('--wbname', default="zaim-train-10-all-new")
     return parser
 
 class Processor():
@@ -187,8 +188,8 @@ class Processor():
                         # input('Refresh the website of tensorboard by pressing any keys')
                     else:
                         print('Dir not removed: ', arg.model_saved_name)
-                self.train_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'train'), 'train')
-                self.val_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'val'), 'val')
+                # self.train_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'train'), 'train')
+                # self.val_writer = SummaryWriter(os.path.join(arg.model_saved_name, 'val'), 'val')
         self.global_step = 0
         self.load_model()
         self.load_optimizer()
@@ -220,7 +221,8 @@ class Processor():
         output_device = self.arg.device[0] if type(self.arg.device) is list else self.arg.device
         self.output_device = output_device
         Model = import_class(self.arg.model)
-        shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
+        # if arg.wbname == "zaim-train-10-all-new":
+        #     shutil.copy(inspect.getfile(Model), self.arg.work_dir)
         #print(Model)
         self.model = Model(**self.arg.model_args).cuda(output_device)
         self.model_hash = self.arg.model_hash
@@ -476,10 +478,10 @@ class Processor():
             wandb.log({"val_acc" : accuracy, "val_epoch" : epoch, "epoch" : epoch, "val_loss" : loss})
             
             print('Accuracy: ', accuracy, ' model: ', self.arg.model_saved_name)
-            if self.arg.phase == 'train':
-                self.val_writer.add_scalar('loss', loss, self.global_step)
-                self.val_writer.add_scalar('loss_l1', l1, self.global_step)
-                self.val_writer.add_scalar('acc', accuracy, self.global_step)
+            # if self.arg.phase == 'train':
+            #     self.val_writer.add_scalar('loss', loss, self.global_step)
+            #     self.val_writer.add_scalar('loss_l1', l1, self.global_step)
+            #     self.val_writer.add_scalar('acc', accuracy, self.global_step)
 
             score_dict = dict(
                 zip(self.data_loader[ln].dataset.sample_name, score))
@@ -522,7 +524,7 @@ class Processor():
                 else:
                     early_stop += 1
                 
-                if early_stop > 10 and epoch > 30:
+                if early_stop > 16 and epoch > 30:
                     print("There was no improvement in the last 10 epochs. Stopping training.")
                     break
                 # end_time_epoch = time.time()
@@ -593,7 +595,7 @@ if __name__ == '__main__':
         parser.set_defaults(**default_arg)
 
     arg = parser.parse_args()
-    wandb.init(project="zaim-train-10-all-new", entity="gcn-nas", name=arg.model_hash)
+    wandb.init(project=arg.wbname, entity="gcn-nas", name=arg.model_hash)
     
     init_seed(0)
     processor = Processor(arg)

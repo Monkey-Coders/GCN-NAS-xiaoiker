@@ -1,32 +1,62 @@
 q:
-	squeue -u zuimran
+	squeue -u maxts
 
 qg:
-	squeue -u zuimran -p GPUQ
+	squeue -u maxts -p GPUQ
 
 qc:
-	squeue -u zuimran -p CPUQ
+	squeue -u maxts -p CPUQ
 	
 qs:
-	squeue --start -u zuimran
+	squeue --start -u maxts
 	
 r:
-	chmod u+x zzz_slurm/job.slurm && sbatch zzz_slurm/job.slurm
+	sbatch zzz_slurm/job.slurm
 
 t:
-	chmod u+x zzz_slurm/task.slurm && sbatch zzz_slurm/task.slurm
+	sbatch zzz_slurm/task.slurm
 
 z:
-	chmod u+x zzz_slurm/zc.slurm && sbatch zzz_slurm/zc.slurm
+	sbatch zzz_slurm/zc.slurm
 
 c:
-	chmod u+x zzz_slurm/cpu.slurm && sbatch zzz_slurm/cpu.slurm
+	sbatch zzz_slurm/cpu.slurm
+
+zip:
+	sbatch zzz_slurm/zip.slurm
 
 s:
 	scancel $(id)
 
 sa:
-	scancel -u zuimran -p GPUQ
+	scancel -u maxts -p GPUQ
 
 gpu:
 	nvidia-smi
+
+zsa:
+	scancel -u zuimran -p GPUQ
+
+zq:
+	squeue -u zuimran
+
+zqg:
+	squeue -u zuimran -p GPUQ
+
+zqc:
+	squeue -u zuimran -p CPUQ
+	
+zqs:
+	squeue --start -u zuimran
+
+niko:
+	squeue -u nikolard
+
+nikos:
+	squeue --start -u nikolard
+
+ian:
+	squeue -u iaevange
+
+salar:
+	squeue -u salara
