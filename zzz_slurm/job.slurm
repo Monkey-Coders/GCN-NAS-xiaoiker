@@ -6,8 +6,8 @@
 #SBATCH --constraint="A100"
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=8
-#SBATCH --job-name=hash
-#SBATCH --output=hash.out
+#SBATCH --job-name=JOB
+#SBATCH --output=#JOB.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 #SBATCH --export=model_hash,weights,start_epoch,path

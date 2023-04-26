@@ -7,7 +7,7 @@
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=INSTALL
-#SBATCH --output=INSTALL.out
+#SBATCH --output=#INSTALL.out
 #SBATCH --mail-user=zuimran@stud.ntnu.no
 #SBATCH --mail-type=ALL
 
