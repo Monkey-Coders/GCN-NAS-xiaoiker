@@ -22,16 +22,36 @@ echo “We are using $SLURM_CPUS_ON_NODE cores”
 echo “We are using $SLURM_CPUS_ON_NODE cores per node”
 echo “Total of $SLURM_NTASKS cores”
 
-# module purge
-# module load Python/3.8.6-GCCcore-10.2.0
-# pip install -r requirements.txt --user -q
+module purge
+module load Python/3.9.6-GCCcore-11.2.0
+
+echo "Pip install requirements"
+pip install -r requirements.txt --user -q
 
 
-# zip -r run.zip experiment/run
+# echo "######################"
+# echo "Move"
 # python3 utils/move.py
-# python3 utils/weighted_average.py
-# python3 ZeroCostFramework/calculate_correlation_of_epochs.py
+# echo "######################"
+
+echo "######################"
+echo "Correlation"
+python3 ZeroCostFramework/calculate_correlation_of_epochs.py
+echo "######################"
+
+echo "######################"
+echo "Vote"
+python3 ZeroCostFramework/calculate_vote.py
+echo "######################"
+
+echo "######################"
+echo "Weighted Average"
+python3 utils/weighted_average.py
+echo "######################"
+
+# echo "######################"
+# echo "Plot"
 # python3 utils/plot.py
-# python3 ZeroCostFramework/calculate_vote.py
+# echo "######################"
 
 uname -a

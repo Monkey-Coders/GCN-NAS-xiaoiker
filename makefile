@@ -60,3 +60,7 @@ ian:
 
 salar:
 	squeue -u salara
+
+check:
+	squeue -u maxts -t R > a.txt && squeue -u zuimran -t R >> a.txt && squeue -u nikolard -t R >> a.txt && squeue -u iaevange -t R >> a.txt && squeue -u salara -t R >> a.txt
+	squeue -u maxts -t PD > b.txt && squeue -u zuimran -t PD >> b.txt && squeue -u nikolard -t PD >> b.txt && squeue -u iaevange -t PD >> b.txt && squeue -u salara -t PD >> b.txt
