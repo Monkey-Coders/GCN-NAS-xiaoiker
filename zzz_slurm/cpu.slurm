@@ -4,7 +4,7 @@
 #SBATCH --time=01:15:00
 #SBATCH --mem=40G
 #SBATCH --job-name=CPU
-#SBATCH --output=#CPU.out
+#SBATCH --output=CPU.out
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
@@ -25,8 +25,16 @@ echo “Total of $SLURM_NTASKS cores”
 module purge
 module load Python/3.9.6-GCCcore-11.2.0
 
+echo "######################"
 echo "Pip install requirements"
 pip install -r requirements.txt --user -q
+echo "######################"
+echo "Installing thop"
+pip install thop --user -q
+echo "######################"
+echo "Installing PyTorch"
+pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
+
 
 
 # echo "######################"
@@ -39,15 +47,16 @@ echo "Correlation"
 python3 ZeroCostFramework/calculate_correlation_of_epochs.py
 echo "######################"
 
-echo "######################"
-echo "Vote"
-python3 ZeroCostFramework/calculate_vote.py
-echo "######################"
 
-echo "######################"
-echo "Weighted Average"
-python3 utils/weighted_average.py
-echo "######################"
+#echo "######################"
+#echo "Vote"
+#python3 ZeroCostFramework/calculate_vote.py
+#echo "######################"
+
+#echo "######################"
+#echo "Weighted Average"
+#python3 utils/weighted_average.py
+#echo "######################"
 
 # echo "######################"
 # echo "Plot"

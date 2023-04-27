@@ -57,9 +57,12 @@ python gcn_search.py --config ./config/nturgbd-cross-view/search_joint.yaml
 ## License
 All materials in this repository are released under the Apache License 2.0.
 
+feidebrukernavn
+
+paalamo
 ssh feidebrukernavn@idun-login2.hpc.ntnu.no
 
-setfacl -q -R -m user:salara:rwx zuimran
+setfacl -R -m user:paalamo:rwx zuimran
 chmod a+rwx zuimran
 getfacl zuimran
 

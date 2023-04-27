@@ -1,4 +1,5 @@
 import os
+import json
 
 # path = "experiment"
 # layers = 4
@@ -29,7 +30,7 @@ import os
 #     json.dump(push, f)
 
 # get all files with .out in output folder
-path = "output"
+""" path = "output"
 files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f)) and ".out" in f]
 x = []
 for file in files:
@@ -37,5 +38,26 @@ for file in files:
         lines = f.read()
         if "PermissionError" in lines:
             x.append(file)
-print(x)
-        
+print(x) """
+base_path = "experiment"
+temp_arch = {}
+with open(f'{base_path}/generated_architectures.json') as f:
+        architectures = json.load(f)
+        for i, (model_hash, model) in enumerate(architectures.items()):
+            path_to_weights = f"{base_path}/run/{model_hash}"
+            files = os.listdir(path_to_weights)
+            weights = [file for file in files if file.endswith(".pt")]
+            if len(weights) == 0:
+                continue
+            max_epoch = 0
+            for weight in weights:
+                epoch = int(weight.split("-")[1])
+                if epoch > max_epoch:
+                    max_epoch = epoch
+            if max_epoch >= 30:
+                temp_arch[model_hash] = model
+        architectures = temp_arch
+
+# Loop through all elements in the architectures dict and print out the index and the val_acc
+for i, (model_hash, model) in enumerate(architectures.items()):
+    print(i, model["val_acc"])    
