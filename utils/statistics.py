@@ -24,3 +24,14 @@ with open(f'{path}/generated_architectures.json', 'r') as f:
     print("The median validation accuracy is {}".format(median))
     print("The maximum validation accuracy is {}".format(max(val_acc)))
     print("The minimum validation accuracy is {}".format(min(val_acc)))
+
+    # Find the average number of layers, minimum and maximum number of layers
+    layers = []
+    for architecture in architectures:
+        layers.append(len(architectures[architecture]["weights"]))
+    print("The average number of layers is {}".format(sum(layers)/len(layers)))
+    print("The maximum number of layers is {}".format(max(layers)))
+    print("The minimum number of layers is {}".format(min(layers)))
+
+    # Find minimum, maximum and average number of parameters
+            
