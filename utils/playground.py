@@ -39,25 +39,33 @@ for file in files:
         if "PermissionError" in lines:
             x.append(file)
 print(x) """
+
 base_path = "experiment"
-temp_arch = {}
-with open(f'{base_path}/generated_architectures.json') as f:
+with open(f'{base_path}/generated_architectures_test.json') as f:
         architectures = json.load(f)
-        for i, (model_hash, model) in enumerate(architectures.items()):
-            path_to_weights = f"{base_path}/run/{model_hash}"
-            files = os.listdir(path_to_weights)
-            weights = [file for file in files if file.endswith(".pt")]
-            if len(weights) == 0:
-                continue
-            max_epoch = 0
-            for weight in weights:
-                epoch = int(weight.split("-")[1])
-                if epoch > max_epoch:
-                    max_epoch = epoch
-            if max_epoch >= 30:
-                temp_arch[model_hash] = model
-        architectures = temp_arch
+        # temp_arch = {}
+        # for i, (model_hash, model) in enumerate(architectures.items()):
+        #     path_to_weights = f"{base_path}/run/{model_hash}"
+        #     files = os.listdir(path_to_weights)
+        #     weights = [file for file in files if file.endswith(".pt")]
+        #     if len(weights) == 0:
+        #         continue
+        #     max_epoch = 0
+        #     for weight in weights:
+        #         epoch = int(weight.split("-")[1])
+        #         if epoch > max_epoch:
+        #             max_epoch = epoch
+        #     if max_epoch >= 45 and model["val_acc"] > 0.85:
+        #         temp_arch[model_hash] = model
+        # architectures = temp_arch
+
+# with open(f'{base_path}/generated_architectures_test.json', 'w') as f:
+#     json.dump(architectures, f)
 
 # Loop through all elements in the architectures dict and print out the index and the val_acc
-for i, (model_hash, model) in enumerate(architectures.items()):
-    print(i, model["val_acc"])    
+# time = []
+# for i, (model_hash, model) in enumerate(architectures.items()):
+#     time.append(model["time"])
+    
+# print(f"average time: {sum(time)/len(time)}")
+# print(f"total time: {sum(time)}")

@@ -1,14 +1,14 @@
 q:
-	squeue -u maxts
+	squeue -u zuimran
 
 qg:
-	squeue -u maxts -p GPUQ
+	squeue -u zuimran -p GPUQ
 
 qc:
-	squeue -u maxts -p CPUQ
+	squeue -u zuimran -p CPUQ
 	
 qs:
-	squeue --start -u maxts
+	squeue --start -u zuimran
 	
 r:
 	sbatch zzz_slurm/job.slurm
@@ -29,25 +29,13 @@ s:
 	scancel $(id)
 
 sa:
-	scancel -u maxts -p GPUQ
+	scancel -u zuimran
 
 gpu:
 	nvidia-smi
 
-zsa:
-	scancel -u zuimran -p GPUQ
-
-zq:
-	squeue -u zuimran
-
-zqg:
-	squeue -u zuimran -p GPUQ
-
-zqc:
-	squeue -u zuimran -p CPUQ
-	
-zqs:
-	squeue --start -u zuimran
+max:
+	squeue -u maxts
 
 niko:
 	squeue -u nikolard
@@ -68,5 +56,6 @@ pal:
 	squeue -u paalamo
 
 check:
-	squeue -u maxts -t R > a.txt && squeue -u zuimran -t R >> a.txt && squeue -u nikolard -t R >> a.txt && squeue -u iaevange -t R >> a.txt && squeue -u salara -t R >> a.txt && squeue -u mathiaoh -t R >> a.txt && squeue -u paalamo -t R >> a.txt
-	squeue -u maxts -t PD > b.txt && squeue -u zuimran -t PD >> b.txt && squeue -u nikolard -t PD >> b.txt && squeue -u iaevange -t PD >> b.txt && squeue -u salara -t PD >> b.txt && squeue -u mathiaoh -t PD >> b.txt && squeue -u paalamo -t PD >> b.txt
+	squeue -u maxts -t R > a.txt && squeue -u zuimran -h -t R >> a.txt && squeue -u nikolard -h -t R >> a.txt && squeue -u iaevange -h -t R >> a.txt && squeue -u salara -h -t R >> a.txt && squeue -u mathiaoh -h -t R >> a.txt && squeue -u paalamo -h -t R >> a.txt
+	squeue -u maxts -t PD > b.txt && squeue -u zuimran -h -t PD >> b.txt && squeue -u nikolard -h -t PD >> b.txt && squeue -u iaevange -h -t PD >> b.txt && squeue -u salara -h -t PD >> b.txt && squeue -u mathiaoh -h -t PD >> b.txt && squeue -u paalamo -h -t PD >> b.txt
+	python3 utils/retrain_diff.py

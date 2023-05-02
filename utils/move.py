@@ -30,23 +30,25 @@ def fix_config(to_path, model_hash):
 
 with open(f"{from_path}/generated_architectures.json", "r") as f:
     from_architectures = json.load(f)
-with open(f"{to_path}/generated_architectures.json", "r") as f:
+with open(f"{to_path}/generated_architectures_test.json", "r") as f:
     to_architectures = json.load(f)
-    
+
+temp = {}
 for model_hash, model in tqdm(from_architectures.copy().items()):
     if "val_acc" in model:
         if model_hash not in to_architectures:    
             if has_nan(model):
                 continue
             try:
-                copy_tree(f"{from_path}/run/{model_hash}", f"{to_path}/run/{model_hash}")
-                fix_config(to_path, model_hash)
-                to_architectures[model_hash] = model
-                del from_architectures[model_hash]
+                # copy_tree(f"{from_path}/run/{model_hash}", f"{to_path}/run/{model_hash}")
+                # fix_config(to_path, model_hash)
+                temp[model_hash] = model
+                # del from_architectures[model_hash]
             except:
                 continue
 
-with open(f"{from_path}/generated_architectures.json", "w") as f:
-    json.dump(from_architectures, f)
-with open(f"{to_path}/generated_architectures.json", "w") as f:
+with open(f"{to_path}/generated_architectures_test.json", "r") as f:
+    to_architectures = json.load(f)
+    to_architectures.update(temp)
+with open(f"{to_path}/generated_architectures_test.json", "w") as f:
     json.dump(to_architectures, f)

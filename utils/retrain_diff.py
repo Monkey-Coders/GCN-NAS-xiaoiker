@@ -13,6 +13,7 @@ for i, (model_hash, model) in enumerate(architectures.items()):
         print(f"\033[92m+ 'val_acc': {model['val_acc']}\033[0m")
         print(f"\033[91m- 'val_acc': {architectures_old[model_hash]['val_acc']}\033[0m")
         count += 1
+
 print()
 print(f"Total: {count}")
 

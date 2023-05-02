@@ -1,9 +1,11 @@
 import json
+import os
 # Read the file architectures/generated_architectures.json
 path = "experiment"
 
-with open(f'{path}/generated_architectures.json', 'r') as f:
+with open(f'{path}/generated_architectures_test.json') as f:
     architectures = json.load(f)
+
     count = 0
     val_acc = []
     for architecture in architectures:

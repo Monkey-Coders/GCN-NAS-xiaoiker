@@ -1,9 +1,9 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=share-ie-idi
-#SBATCH --time=48:20:00
+#SBATCH --time=2:00:00
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="A100"
+#SBATCH --constraint="A100|V100"
 #SBATCH --mem=40G
 #SBATCH --cpus-per-task=8
 #SBATCH --job-name=JOB
@@ -48,8 +48,10 @@ echo "######################"
 echo "Copying data"
 cp -r data model_data/$model_hash
 echo "######################"
-echo "Running zaim with hash $model_hash and start epoch $start_epoch and weights $weights"
-python3 zaim.py --hash $model_hash --path $path --start_epoch $start_epoch --weights $weights
+echo "Running warmup with hash $model_hash and start epoch $start_epoch and weights $weights"
+# python3 zaim.py --hash $model_hash --path $path --start_epoch $start_epoch --weights $weights
+python3 warmup.py --hash $model_hash --path $path
+# python3 warmup.py --hash $model_hash --path $path
 echo "######################"
 echo "Deleting data"
 rm -rf model_data/$model_hash

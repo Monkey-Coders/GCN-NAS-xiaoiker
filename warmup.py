@@ -98,7 +98,6 @@ def get_zc_scores(path, file_name, overide = []):
 
 
 if __name__ == "__main__":
-    epochs = 10
     parser = argparse.ArgumentParser(description="Train a model")
     parser.add_argument("--hash", type=str, default="", required=True)
     parser.add_argument("--path", type=str, default="experiment", required=False)
@@ -123,7 +122,7 @@ if __name__ == "__main__":
     pt_files.sort()
     track_scores = {}
     
-    with open(f"{base_path}/generated_architectures.json", "r") as f:
+    with open(f"{base_path}/generated_architectures_test.json", "r") as f:
         architectures = json.load(f)
         
     # if "zero_cost_scores" not in architectures[model_hash]:
@@ -134,20 +133,20 @@ if __name__ == "__main__":
     
     for file in pt_files:
         epoch = int(file.split("-")[1]) 
-        if epoch > 9:
+        if epoch > 10:
             continue
-        # if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
-        #     continue
+        if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
+            continue
         print(f"Calculating zero cost scores for epoch {epoch}...")
         try:
             scores = get_zc_scores(f"{base_path}/run/{model_hash}", file, overide_arg)
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error: file not found")
             continue
         track_scores[f"zero_cost_scores_{epoch}"] = scores
 
 
-    with open(f"{base_path}/generated_architectures.json", "r") as f:
+    with open(f"{base_path}/generated_architectures_test.json", "r") as f:
         architectures = json.load(f)
     temp_archi_dict = architectures[model_hash]
     for key in track_scores:
@@ -156,5 +155,5 @@ if __name__ == "__main__":
         except:
             temp_archi_dict[key] = track_scores[key]
     architectures[model_hash] = temp_archi_dict
-    with open(f"{base_path}/generated_architectures.json", "w") as f:
+    with open(f"{base_path}/generated_architectures_test.json", "w") as f:
         json.dump(architectures, f)

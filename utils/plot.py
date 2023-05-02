@@ -6,8 +6,24 @@ import math
 import matplotlib.patches as mpatches
 
 def load_data(path):
-    with open(f'{path}/generated_architectures.json') as f:
+    with open(f'{path}/generated_architectures_test.json') as f:
         return json.load(f)
+        # temp_arch = {}
+        # for i, (model_hash, model) in enumerate(architectures.items()):
+        #     path_to_weights = f"{path}/run/{model_hash}"
+        #     files = os.listdir(path_to_weights)
+        #     weights = [file for file in files if file.endswith(".pt")]
+        #     if len(weights) == 0:
+        #         continue
+        #     max_epoch = 0
+        #     for weight in weights:
+        #         epoch = int(weight.split("-")[1])
+        #         if epoch > max_epoch:
+        #             max_epoch = epoch
+        #     if max_epoch >= 45:
+        #         temp_arch[model_hash] = model
+        
+        # return temp_arch
 
 def create_legend(weight_colors):
     handles = []
@@ -41,24 +57,23 @@ def plot_scores(path, data, weight_colors, score_colors, score_markers, epoch):
 
     plot_all_in_one("all_in_one", path, scores, val_acc, normalized, score_colors, score_markers)
     
-    proxies = ["flops", "jacov", "zen"]
+    proxies = ['plain', 'synflow', 'zen']
     plot_vote("vote", path, val_acc, normalized, proxies, colors, handles, score_markers)
     plot_proxies("zc_proxies", path, scores, nrows, ncols, val_acc, zc_scores, colors, handles, score_markers)
     plot_proxies("normalized", path, scores, nrows, ncols, val_acc, normalized, colors, handles, score_markers)
 
-def plot_proxies(filename, path, scores, nrows, ncols, val_acc, scores_data, colors, handles):
+def plot_proxies(filename, path, scores, nrows, ncols, val_acc, scores_data, colors, handles, score_markers):
     plt.clf()
     plt.cla()
     fig, axs = plt.subplots(nrows=nrows, ncols=ncols, figsize=(5 * ncols, 5 * nrows))
     for i, score in enumerate(scores):
         ax = axs[i // ncols, i % ncols]
         ax.set_title(score)
-        for a in range(len(val_acc)):
-            ax.scatter(val_acc[a], scores_data[score][a], color=colors[a])
+        ax.scatter(val_acc, scores_data[score])
         ax.set_xlabel('val_acc')
         ax.set_ylabel(score)
 
-    fig.legend(handles=handles, loc='upper right')
+    # fig.legend(handles=handles, loc='upper right')
     fig.tight_layout(pad=2.0)
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
@@ -77,14 +92,13 @@ def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles, sco
     plt.clf()
     plt.cla()
     for p in proxies:
-        for i in range(len(val_acc)):
-            plt.scatter(val_acc[i], normalized[p][i], color=colors[i])
+        plt.scatter(val_acc, normalized[p])
     plt.xlabel('val_acc')
     plt.ylabel('vote')
     plt.title(f"{proxies}")
     plt.rcParams["figure.figsize"] = (8, 8)
 
-    plt.legend(handles=handles, loc='upper right')
+    # plt.legend(handles=handles, loc='upper right')
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
 

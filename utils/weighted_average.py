@@ -2,14 +2,28 @@ import json
 import os
 import numpy as np
 import matplotlib.pyplot as plt
-import math
 import matplotlib.patches as mpatches
-import pandas as pd
 import scipy
 
 def load_data(path):
-    with open(f"{path}/generated_architectures.json") as f:
-        return json.load(f)
+    with open(f'{path}/generated_architectures_test.json') as f:
+        architectures = json.load(f)
+        temp_arch = {}
+        for i, (model_hash, model) in enumerate(architectures.items()):
+            path_to_weights = f"{path}/run/{model_hash}"
+            files = os.listdir(path_to_weights)
+            weights = [file for file in files if file.endswith(".pt")]
+            if len(weights) == 0:
+                continue
+            max_epoch = 0
+            for weight in weights:
+                epoch = int(weight.split("-")[1])
+                if epoch > max_epoch:
+                    max_epoch = epoch
+            if max_epoch >= 45 and model["val_acc"] > 0.85:
+                temp_arch[model_hash] = model
+        
+        return temp_arch
 
 def create_legend(weight_colors):
     handles = []
@@ -58,7 +72,7 @@ def calculate_correlation(val_acc, normalized, scores):
 
     corr_matrix = {}
     for score in scores:
-        corr_matrix[score] = scipy.stats.spearmanr([obj[score] for obj in _data], val_acc)
+        corr_matrix[score] = scipy.stats.spearmanr([obj[score] for obj in _data], val_acc)[0]
     return corr_matrix
 
 def wa_func(val_acc, normalized, scores, corr_matrix):
@@ -66,27 +80,25 @@ def wa_func(val_acc, normalized, scores, corr_matrix):
     override_scores = []
     if len(override_scores) > 0:
         scores = override_scores
-
     weighted_average = []
     for i in range(len(val_acc)):
         wa = 0
         weighted_sum = 0
         for score in scores:
-            wa += normalized[score][i] * math.abs(corr_matrix[score])
-            weighted_sum += math.abs(corr_matrix[score])
+            wa += normalized[score][i] * abs(corr_matrix[score])
+            weighted_sum += abs(corr_matrix[score])
         wa /= weighted_sum
         weighted_average.append(wa)
     return weighted_average
 
 
 def plotis(val_acc, weighted_average, colors, hand, path):
-    for i in range(len(val_acc)):
-        plt.scatter(val_acc[i], weighted_average[i], c=colors[i])
+    plt.scatter(val_acc, weighted_average)
     plt.xlabel("val_acc")
     plt.ylabel("weighted_average")
     spr_rank = scipy.stats.spearmanr(val_acc, weighted_average)
     plt.title(f"Weighted Average\nspearmanrank={spr_rank[0]:.3f}")
-    plt.legend(handles=hand, loc="upper left")
+    # plt.legend(handles=hand, loc="upper left")
     plt.savefig(f"{path}/plot/weighted_average.png")
 
 

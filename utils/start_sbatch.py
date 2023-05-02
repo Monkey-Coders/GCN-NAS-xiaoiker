@@ -16,8 +16,8 @@ hashishish = [
 # niko 3
 # mathias 4
 # pål 5
-# ie-zaim 6
-zxc = 7
+# max 6
+zxc = 6
 
 
 
@@ -27,6 +27,7 @@ for i, (model_hash, model) in enumerate(archis.items()):
         continue
     if i >= 100 * (zxc + 1):
         break
+    
     
     if len(hashishish) > 0:
         if model_hash not in hashishish:
