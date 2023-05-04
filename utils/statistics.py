@@ -31,6 +31,11 @@ with open(f'{path}/generated_architectures.json') as f:
     layers = []
     for architecture in architectures:
         layers.append(len(architectures[architecture]["weights"]))
+    
+    print(f"Archi with 10 layers: {len([l for l in layers if l == 10])}")
+    print(f"Archi with 8 layers: {len([l for l in layers if l == 8])}")
+    print(f"Archi with 6 layers: {len([l for l in layers if l == 6])}")
+    print(f"Archi with 4 layers: {len([l for l in layers if l == 4])}")
     print("The average number of layers is {}".format(sum(layers)/len(layers)))
     print("The maximum number of layers is {}".format(max(layers)))
     print("The minimum number of layers is {}".format(min(layers)))

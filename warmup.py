@@ -27,7 +27,7 @@ def load_data(path):
     Feeder = import_class(config["feeder"])
     data_loader = torch.utils.data.DataLoader(
         dataset=Feeder(**config["train_feeder_args"]),
-        batch_size=config["batch_size"],
+        batch_size=int(config["test_batch_size"]),
         shuffle=True,
         num_workers=config["num_worker"],
         drop_last=True,
@@ -133,7 +133,7 @@ if __name__ == "__main__":
     
     for file in pt_files:
         epoch = int(file.split("-")[1]) 
-        if epoch > 10:
+        if epoch > 45:
             continue
         if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
             continue
