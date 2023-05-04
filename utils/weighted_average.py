@@ -6,7 +6,7 @@ import matplotlib.patches as mpatches
 import scipy
 
 def load_data(path):
-    with open(f'{path}/generated_architectures_test.json') as f:
+    with open(f'{path}/generated_architectures.json') as f:
         architectures = json.load(f)
         temp_arch = {}
         for i, (model_hash, model) in enumerate(architectures.items()):
@@ -94,10 +94,14 @@ def wa_func(val_acc, normalized, scores, corr_matrix):
 
 def plotis(val_acc, weighted_average, colors, hand, path):
     plt.scatter(val_acc, weighted_average)
+    m, b = np.polyfit(val_acc, weighted_average, 1) 
+    line_y = m*np.array(val_acc) + b
+    plt.plot(val_acc, line_y,'r:')
+
     plt.xlabel("val_acc")
-    plt.ylabel("weighted_average")
+    plt.ylabel("weighted_arithmetic_mean")
     spr_rank = scipy.stats.spearmanr(val_acc, weighted_average)
-    plt.title(f"Weighted Average\nspearmanrank={spr_rank[0]:.3f}")
+    plt.title(f"Weighted Arithmetic Mean\nspearmanrank={spr_rank[0]:.3f}")
     # plt.legend(handles=hand, loc="upper left")
     plt.savefig(f"{path}/plot/weighted_average.png")
 

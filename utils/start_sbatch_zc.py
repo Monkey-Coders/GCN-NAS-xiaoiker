@@ -5,7 +5,7 @@ path = "experiment"
 
 hashes = []
 if len(hashes) == 0:
-    with open(f"{path}/generated_architectures_test.json", "r") as f:
+    with open(f"{path}/generated_architectures.json", "r") as f:
         archis = json.load(f)
     for model_hash, model in archis.items():
         hashes.append(model_hash)

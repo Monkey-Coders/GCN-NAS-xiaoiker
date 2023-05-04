@@ -41,10 +41,34 @@ for file in files:
 print(x) """
 
 base_path = "experiment"
-with open(f'{base_path}/generated_architectures_test.json') as f:
+
+
+
+
+with open("experiment/generated_architectures.json", "r") as f:
+    architectures = json.load(f)
+
+with open("experiment/generated_architectures_old.json", "r") as f:
+    architectures_old = json.load(f)
+    
+    
+temp = {}
+for i, (model_hash, model) in enumerate(architectures.items()):
+    if architectures_old[model_hash]["val_acc"] != model["val_acc"]:
+        temp[model_hash] = model
+
+with open(f'{base_path}/generated_architectures.json', 'w') as f:
+    json.dump(temp, f)
+
+
+
+"""
+
+with open(f'{base_path}/generated_architectures.json') as f:
         architectures = json.load(f)
-        # temp_arch = {}
-        # for i, (model_hash, model) in enumerate(architectures.items()):
+with open(f'{base_path}/generated_architectures_old.json') as f:
+        architectures = json.load(f)
+        for i, (model_hash, model) in enumerate(architectures.items()):
         #     path_to_weights = f"{base_path}/run/{model_hash}"
         #     files = os.listdir(path_to_weights)
         #     weights = [file for file in files if file.endswith(".pt")]
@@ -57,10 +81,9 @@ with open(f'{base_path}/generated_architectures_test.json') as f:
         #             max_epoch = epoch
         #     if max_epoch >= 45 and model["val_acc"] > 0.85:
         #         temp_arch[model_hash] = model
-        # architectures = temp_arch
 
-# with open(f'{base_path}/generated_architectures_test.json', 'w') as f:
-#     json.dump(architectures, f)
+with open(f'{base_path}/generated_architectures.json', 'w') as f:
+    json.dump(architectures, f)
 
 # Loop through all elements in the architectures dict and print out the index and the val_acc
 # time = []
@@ -69,3 +92,4 @@ with open(f'{base_path}/generated_architectures_test.json') as f:
     
 # print(f"average time: {sum(time)/len(time)}")
 # print(f"total time: {sum(time)}")
+"""

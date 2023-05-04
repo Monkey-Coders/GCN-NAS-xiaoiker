@@ -6,7 +6,7 @@ import math
 import matplotlib.patches as mpatches
 
 def load_data(path):
-    with open(f'{path}/generated_architectures_test.json') as f:
+    with open(f'{path}/generated_architectures.json') as f:
         return json.load(f)
         # temp_arch = {}
         # for i, (model_hash, model) in enumerate(architectures.items()):
@@ -57,8 +57,8 @@ def plot_scores(path, data, weight_colors, score_colors, score_markers, epoch):
 
     plot_all_in_one("all_in_one", path, scores, val_acc, normalized, score_colors, score_markers)
     
-    proxies = ['plain', 'synflow', 'zen']
-    plot_vote("vote", path, val_acc, normalized, proxies, colors, handles, score_markers)
+    proxies = ['synflow', 'zen', 'plain']
+    plot_vote("vote", path, val_acc, normalized, proxies, colors, handles, score_markers, score_colors)
     plot_proxies("zc_proxies", path, scores, nrows, ncols, val_acc, zc_scores, colors, handles, score_markers)
     plot_proxies("normalized", path, scores, nrows, ncols, val_acc, normalized, colors, handles, score_markers)
 
@@ -88,17 +88,21 @@ def plot_all_in_one(filename, path, scores, val_acc, normalized, score_colors, s
     plt.rcParams["figure.figsize"] = (20, 20)
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
-def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles, score_markers):
+def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles, score_markers, score_colors):
     plt.clf()
     plt.cla()
+    handle = []
+    
     for p in proxies:
-        plt.scatter(val_acc, normalized[p])
+        handle.append(mpatches.Patch(color=score_colors[p], label=f'{p}'))
+        plt.scatter(val_acc, normalized[p], color=score_colors[p])
+        
     plt.xlabel('val_acc')
     plt.ylabel('vote')
-    plt.title(f"{proxies}")
+    plt.title(",".join(proxies))
     plt.rcParams["figure.figsize"] = (8, 8)
 
-    # plt.legend(handles=handles, loc='upper right')
+    plt.legend(handles=handle, loc='upper right')
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
 
@@ -107,20 +111,20 @@ if __name__ == '__main__':
     data = load_data(path)
     
     score_colors = {
-        "plain": "blue",
         "params": "red",
-        "flops": "green",
-        "synflow": "orange",
-        "snip": "purple",
+        "flops": "orange",
         "grad_norm": "brown",
-        "epe_nas": "pink",
+        "epe_nas": "blue",
         "grasp": "gray",
-        "fisher": "cyan",
         "l2_norm": "black",
         "jacov": "magenta",
-        "zen": "olive",
-        "nwot": "teal",
-        "grad_sign": "navy"
+        "fisher": "olive",
+        "nwot": "cyan",
+        "grad_sign": "navy",
+        "snip": "purple",
+        "plain": "orange",
+        "synflow": "green",
+        "zen": "blue",
     }
     score_markers = {
         "plain": "o",

@@ -8,8 +8,8 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=10
-#SBATCH --mail-user=zuimran@stud.ntnu.no
-#SBATCH --mail-type=ALL
+#SBATCH --mail-user=maxts@stud.ntnu.no
+#SBATCH --mail-type=NONE
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
@@ -35,34 +35,34 @@ echo "######################"
 echo "Installing PyTorch"
 pip install torch==1.13.1+cu116 torchvision==0.14.1+cu116 torchaudio==0.13.1+cu116 -f https://download.pytorch.org/whl/torch_stable.html --user -q
 
-# echo "######################"
-# echo "Move"
-# python3 utils/move.py
-# echo "######################"
+echo "######################"
+echo "Move"
+python3 utils/move.py
+echo "######################"
 
-echo "######################"
-echo "Correlation"
-python3 ZeroCostFramework/calculate_correlation_of_epochs.py
-echo "######################"
+# echo "######################"
+# echo "Correlation"
+# python3 ZeroCostFramework/calculate_correlation_of_epochs.py
+# echo "######################"
 
 # echo "######################"
 # echo "Vote"
 # python3 ZeroCostFramework/calculate_vote.py
 # echo "######################"
 
-echo "######################"
-echo "Weighted Average"
-python3 utils/weighted_average.py
-echo "######################"
+# echo "######################"
+# echo "Weighted Average"
+# python3 utils/weighted_average.py
+# echo "######################"
 
-echo "######################"
-echo "Statistics"
-python3 utils/statistics.py
-echo "######################"
+# echo "######################"
+# echo "Statistics"
+# python3 utils/statistics.py
+# echo "######################"
 
-echo "######################"
-echo "Plot"
-python3 utils/plot.py
-echo "######################"
+#echo "######################"
+#echo "Plot"
+#python3 utils/plot.py
+#echo "######################"
 
 uname -a

@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 import yaml
 
-from_path = "architectures_8"
+from_path = "architectures_10"
 to_path = "experiment"
 
 def has_nan(d):
@@ -30,7 +30,7 @@ def fix_config(to_path, model_hash):
 
 with open(f"{from_path}/generated_architectures.json", "r") as f:
     from_architectures = json.load(f)
-with open(f"{to_path}/generated_architectures_test.json", "r") as f:
+with open(f"{to_path}/generated_architectures.json", "r") as f:
     to_architectures = json.load(f)
 
 temp = {}
@@ -47,8 +47,8 @@ for model_hash, model in tqdm(from_architectures.copy().items()):
             except:
                 continue
 
-with open(f"{to_path}/generated_architectures_test.json", "r") as f:
+with open(f"{to_path}/generated_architectures.json", "r") as f:
     to_architectures = json.load(f)
     to_architectures.update(temp)
-with open(f"{to_path}/generated_architectures_test.json", "w") as f:
+with open(f"{to_path}/generated_architectures.json", "w") as f:
     json.dump(to_architectures, f)

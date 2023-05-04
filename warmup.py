@@ -122,7 +122,7 @@ if __name__ == "__main__":
     pt_files.sort()
     track_scores = {}
     
-    with open(f"{base_path}/generated_architectures_test.json", "r") as f:
+    with open(f"{base_path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
         
     # if "zero_cost_scores" not in architectures[model_hash]:
@@ -146,7 +146,7 @@ if __name__ == "__main__":
         track_scores[f"zero_cost_scores_{epoch}"] = scores
 
 
-    with open(f"{base_path}/generated_architectures_test.json", "r") as f:
+    with open(f"{base_path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
     temp_archi_dict = architectures[model_hash]
     for key in track_scores:
@@ -155,5 +155,5 @@ if __name__ == "__main__":
         except:
             temp_archi_dict[key] = track_scores[key]
     architectures[model_hash] = temp_archi_dict
-    with open(f"{base_path}/generated_architectures_test.json", "w") as f:
+    with open(f"{base_path}/generated_architectures.json", "w") as f:
         json.dump(architectures, f)
