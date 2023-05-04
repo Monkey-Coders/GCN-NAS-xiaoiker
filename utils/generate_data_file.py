@@ -1,6 +1,6 @@
 import json
 
-file_name = "generated_architectures_test_copy.json"
+file_name = "generated_architectures.json"
 path = "experiment"
 
 result = []
@@ -21,7 +21,7 @@ with open(f"{path}/{file_name}", "r") as f:
         res = {**zc_scores, **val_acc}
         result.append(res)
 
-with open(f"{path}/updated_data.json", "w") as f:
+with open(f"{path}/data.json", "w") as f:
     print("Writing to file...")
     json.dump(result, f, indent=4, sort_keys=True)
     print("Done!")

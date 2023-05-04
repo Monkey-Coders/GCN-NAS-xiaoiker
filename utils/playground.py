@@ -44,19 +44,24 @@ base_path = "experiment"
 
 
 
+temp = {}
 
 with open("experiment/generated_architectures.json", "r") as f:
     architectures = json.load(f)
-
-with open("experiment/generated_architectures_old.json", "r") as f:
-    architectures_old = json.load(f)
-    
-    
-temp = {}
-for i, (model_hash, model) in enumerate(architectures.items()):
-    if architectures_old[model_hash]["val_acc"] != model["val_acc"]:
-        temp[model_hash] = model
-
+    for i, (model_hash, model) in enumerate(architectures.items()):
+        path_to_weights = f"{base_path}/run/{model_hash}"
+        files = os.listdir(path_to_weights)
+        weights = [file for file in files if file.endswith(".pt")]
+        if len(weights) == 0:
+            continue
+        max_epoch = 0
+        for weight in weights:
+            epoch = int(weight.split("-")[1])
+            if epoch > max_epoch:
+                max_epoch = epoch
+        if max_epoch >= 45 and model["val_acc"] > 0.85:
+            temp[model_hash] = model
+   
 with open(f'{base_path}/generated_architectures.json', 'w') as f:
     json.dump(temp, f)
 
