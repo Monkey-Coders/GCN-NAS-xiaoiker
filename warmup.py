@@ -122,10 +122,12 @@ if __name__ == "__main__":
     pt_files.sort()
     track_scores = {}
     
-    with open(f"{base_path}/generated_architectures.json", "r") as f:
+    json_file = f"{base_path}/data/{model_hash}.json"
+    
+    with open(json_file, "r") as f:
         architectures = json.load(f)
         
-    if "zero_cost_scores" not in architectures[model_hash] or True:
+    if "zero_cost_scores" not in architectures[model_hash]:
         print(f"Calculating zero cost scores for epoch {-1}...")
             
         scores = get_zc_scores(f"{base_path}/run/{model_hash}", None, overide_arg)
@@ -133,9 +135,9 @@ if __name__ == "__main__":
     
     for file in pt_files:
         epoch = int(file.split("-")[1]) 
-        if epoch > 45:
-            continue
-        if f"zero_cost_scores_{epoch}" in architectures[model_hash] and False:
+        # if epoch > 45:
+        #     continue
+        if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
             continue
         print(f"Calculating zero cost scores for epoch {epoch}...")
         try:
@@ -145,15 +147,9 @@ if __name__ == "__main__":
             continue
         track_scores[f"zero_cost_scores_{epoch}"] = scores
 
-
-    with open(f"{base_path}/generated_architectures.json", "r") as f:
+    with open(json_file, "r") as f:
         architectures = json.load(f)
-    temp_archi_dict = architectures[model_hash]
-    for key in track_scores:
-        try:
-            temp_archi_dict[key] = {**architectures[model_hash][key], **track_scores[key]}
-        except:
-            temp_archi_dict[key] = track_scores[key]
-    architectures[model_hash] = temp_archi_dict
-    with open(f"{base_path}/generated_architectures.json", "w") as f:
-        json.dump(architectures, f, indent=4)
+        architectures[model_hash] = {**architectures[model_hash], **track_scores}
+
+    with open(json_file, "w") as f:
+        json.dump(architectures, f)

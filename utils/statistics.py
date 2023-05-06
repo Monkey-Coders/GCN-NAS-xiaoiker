@@ -27,6 +27,16 @@ with open(f'{path}/generated_architectures.json') as f:
     print("The maximum validation accuracy is {}".format(max(val_acc)))
     print("The minimum validation accuracy is {}".format(min(val_acc)))
 
+    # Calculate the minimum, average and maximum training time in seconds, but converted to hours
+    training_time = []
+    for architecture in architectures:
+        if "time" in architectures[architecture]:
+            training_time.append(architectures[architecture]["time"])
+    training_time.sort()
+    print("The average training time is {} hours".format(sum(training_time)/len(training_time)/3600))
+    print("The maximum training time is {} hours".format(max(training_time)/3600))
+    print("The minimum training time is {} hours".format(min(training_time)/3600))
+
     # Find the average number of layers, minimum and maximum number of layers
     layers = []
     for architecture in architectures:

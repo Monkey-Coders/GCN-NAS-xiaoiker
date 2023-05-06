@@ -1,26 +1,45 @@
 import json
+import math
+import os
 import subprocess
 
 path = "experiment"
 
+def contains_nan(dictionary):
+    for value in dictionary.values():
+        if isinstance(value, float) and math.isnan(value):
+            return True
+        elif isinstance(value, dict):
+            if contains_nan(value):
+                return True
+    return False
+
 hashes = []
+zc = ["zero_cost_scores"]
+for i in range(0, 10):
+    zc.append(f"zero_cost_scores_{i}")
+for i in range(11, 46, 2):
+    zc.append(f"zero_cost_scores_{i}")
 if len(hashes) == 0:
-    with open(f"{path}/generated_architectures.json", "r") as f:
-        archis = json.load(f)
-    for model_hash, model in archis.items():
-        hashes.append(model_hash)
+    data = os.listdir(f"{path}/data")
+    for file in data:
+        with open(f"{path}/data/{file}", "r") as f:
+            model = json.load(f)
+            model_hash = file.split(".")[0]
+            # for zc_key in zc:
+            #     if zc_key not in model[model_hash]:
+            #         hashes.append(model_hash)
+            #         break
+            # if contains_nan(model[model_hash]):
+            #     hashes.append(model_hash)
+            hashes.append(model_hash)
 
 
-step = 0
-run = False
-
+print(len(hashes))
 for i, hash_value in enumerate(hashes):
-    if hash_value == "4250ed331a7d7208383962dccbb184f9d12439bb44a2546cf92e0aed58094502":
-        run = True
-    # if i < 20 * step:
-    #     continue
-    # if i >= 20 * (step + 1):
-    #     break
-    if run:
-        sbatch_cmd = f"sbatch --export=model_hash={hash_value},path={path} --job-name=zc-{hash_value} --output=output/zc-{hash_value}.out zzz_slurm/job.slurm"
-        subprocess.call(sbatch_cmd.split())
+    account = "ie-idi"
+    if i % 2 == 0:
+        account = "share-ie-idi"
+        
+    sbatch_cmd = f"sbatch --export=model_hash={hash_value},path={path} --job-name=zc-{hash_value} --output=output/zc-{hash_value}.out --account={account} zzz_slurm/job.slurm"
+    subprocess.call(sbatch_cmd.split())

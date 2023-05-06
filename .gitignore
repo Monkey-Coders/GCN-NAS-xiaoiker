@@ -1,4 +1,4 @@
-data
+data/
 *.out
 __pycache__
 *.zip
@@ -15,3 +15,5 @@ runs/
 configs/
 model_data/
 output/
+
+!experiment/data
