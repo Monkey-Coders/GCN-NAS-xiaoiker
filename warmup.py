@@ -29,7 +29,7 @@ def load_data(path):
         dataset=Feeder(**config["train_feeder_args"]),
         batch_size=int(config["test_batch_size"]),
         shuffle=True,
-        num_workers=config["num_worker"],
+        num_workers=4,
         drop_last=True,
         worker_init_fn=init_seed)
     return data_loader
@@ -125,17 +125,17 @@ if __name__ == "__main__":
     with open(f"{base_path}/generated_architectures.json", "r") as f:
         architectures = json.load(f)
         
-    # if "zero_cost_scores" not in architectures[model_hash]:
-    print(f"Calculating zero cost scores for epoch {-1}...")
-        
-    scores = get_zc_scores(f"{base_path}/run/{model_hash}", None, overide_arg)
-    track_scores[f"zero_cost_scores"] = scores
+    if "zero_cost_scores" not in architectures[model_hash] or True:
+        print(f"Calculating zero cost scores for epoch {-1}...")
+            
+        scores = get_zc_scores(f"{base_path}/run/{model_hash}", None, overide_arg)
+        track_scores[f"zero_cost_scores"] = scores
     
     for file in pt_files:
         epoch = int(file.split("-")[1]) 
         if epoch > 45:
             continue
-        if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
+        if f"zero_cost_scores_{epoch}" in architectures[model_hash] and False:
             continue
         print(f"Calculating zero cost scores for epoch {epoch}...")
         try:
@@ -156,4 +156,4 @@ if __name__ == "__main__":
             temp_archi_dict[key] = track_scores[key]
     architectures[model_hash] = temp_archi_dict
     with open(f"{base_path}/generated_architectures.json", "w") as f:
-        json.dump(architectures, f)
+        json.dump(architectures, f, indent=4)
