@@ -24,7 +24,7 @@ if True:
             model = json.load(f)
             model_hash = file.split(".")[0]
             all_data[model_hash] = model[model_hash]
-    with open(f"{path}/generated_architectures_new.json", "w") as f:
+    with open(f"{path}/generated_architectures.json", "w") as f:
         f.write(json.dumps(all_data, indent=4))
 
 
