@@ -35,7 +35,7 @@ hashes = []
 zc = ["zero_cost_scores"]
 for i in range(0, 10):
     zc.append(f"zero_cost_scores_{i}")
-for i in range(11, 46, 2):
+for i in range(11, 48, 2):
     zc.append(f"zero_cost_scores_{i}")
 if len(hashes) == 0:
     data = os.listdir(f"{path}/data")
@@ -56,16 +56,17 @@ if len(hashes) == 0:
             #                 break
             #         if should_break:
             #             break
-            # if contains_nan(model[model_hash]):
-            #     hashes.append(model_hash)
-            hashes.append(model_hash)
+            if contains_nan(model[model_hash]):
+                hashes.append(model_hash)
+            # hashes.append(model_hash)
 
 hashes = list(set(hashes))
 print(len(hashes))
-for i, hash_value in enumerate(hashes):
-    account = "share-ie-idi"
-    if i % 2 == 0:
-        account = "ie-idi"
+print(hashes)
+# for i, hash_value in enumerate(hashes):
+#     account = "share-ie-idi"
+#     # if i % 2 == 0:
+#     #     account = "ie-idi"
         
-    sbatch_cmd = f"sbatch --export=model_hash={hash_value},path={path} --job-name=zc-{hash_value} --output=output/zc-{hash_value}.out --account={account} zzz_slurm/job.slurm"
-    subprocess.call(sbatch_cmd.split())
+#     sbatch_cmd = f"sbatch --export=model_hash={hash_value},path={path} --job-name=zc-{hash_value} --output=output/zc-{hash_value}.out --account={account} zzz_slurm/job.slurm"
+#     subprocess.call(sbatch_cmd.split())

@@ -12,6 +12,17 @@ import random
 import torch.nn as nn
 import scipy
 import json
+import math
+
+
+def contains_nan(dictionary):
+    for value in dictionary.values():
+        if isinstance(value, float) and math.isnan(value):
+            return True
+        elif isinstance(value, dict):
+            if contains_nan(value):
+                return True
+    return False
 
 def init_seed(_):
     torch.cuda.manual_seed_all(1)
@@ -127,7 +138,7 @@ if __name__ == "__main__":
     with open(json_file, "r") as f:
         architectures = json.load(f)
         
-    if "zero_cost_scores" not in architectures[model_hash]:
+    if "zero_cost_scores" not in architectures[model_hash] or contains_nan(architectures[model_hash]["zero_cost_scores"]):
         print(f"Calculating zero cost scores for epoch {-1}...")
             
         scores = get_zc_scores(f"{base_path}/run/{model_hash}", None, overide_arg)
@@ -137,12 +148,15 @@ if __name__ == "__main__":
         epoch = int(file.split("-")[1]) 
         # if epoch > 45:
         #     continue
-        if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
+        # if f"zero_cost_scores_{epoch}" in architectures[model_hash]:
+        #     continue
+        if not contains_nan(architectures[model_hash][f"zero_cost_scores_{epoch}"]):
             continue
         print(f"Calculating zero cost scores for epoch {epoch}...")
         try:
             scores = get_zc_scores(f"{base_path}/run/{model_hash}", file, overide_arg)
         except Exception as e:
+            print(e)
             print(f"Error: file not found")
             continue
         track_scores[f"zero_cost_scores_{epoch}"] = scores
