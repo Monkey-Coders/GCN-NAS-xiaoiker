@@ -57,7 +57,7 @@ def plot_scores(path, data, weight_colors, score_colors, score_markers, epoch):
 
     plot_all_in_one("all_in_one", path, scores, val_acc, normalized, score_colors, score_markers)
     
-    proxies = ['synflow', 'zen', 'plain']
+    proxies = ['synflow', 'zen', 'fisher']
     plot_vote("vote", path, val_acc, normalized, proxies, colors, handles, score_markers, score_colors)
     plot_proxies("zc_proxies", path, scores, nrows, ncols, val_acc, zc_scores, colors, handles, score_markers)
     plot_proxies("normalized", path, scores, nrows, ncols, val_acc, normalized, colors, handles, score_markers)
@@ -95,14 +95,14 @@ def plot_vote(filename, path, val_acc, normalized, proxies, colors, handles, sco
     
     for p in proxies:
         handle.append(mpatches.Patch(color=score_colors[p], label=f'{p}'))
-        plt.scatter(val_acc, normalized[p], color=score_colors[p])
+        plt.scatter(val_acc, normalized[p], color="blue")
         
     plt.xlabel('val_acc')
     plt.ylabel('vote')
     plt.title(",".join(proxies))
     plt.rcParams["figure.figsize"] = (8, 8)
 
-    plt.legend(handles=handle, loc='upper right')
+    # plt.legend(handles=handle, loc='upper right')
     plt.savefig(f"{path}/plot/{epoch}/{filename}.png")
 
 
