@@ -1,9 +1,9 @@
 #!/bin/sh
 #SBATCH --partition=GPUQ
 #SBATCH --account=share-ie-idi
-#SBATCH --time=2:00:00
+#SBATCH --time=3:00:00
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="V100|P100"
+#SBATCH --constraint="A100"
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
 #SBATCH --job-name=JOB
@@ -14,7 +14,7 @@
 
 WORKDIR=${SLURM_SUBMIT_DIR}
 cd ${WORKDIR}
-echo “we are running from this directory: $SLURM_SUBMIT_DIR”
+echo “we are running from this directory: $SLURM_S UBMIT_DIR”
 echo ” the name of the job is: $SLURM_JOB_NAME”
 echo “Th job ID is $SLURM_JOB_ID”
 echo “The job was run on these nodes: $SLURM_JOB_NODELIST”
