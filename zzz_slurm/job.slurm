@@ -3,7 +3,7 @@
 #SBATCH --account=share-ie-idi
 #SBATCH --time=3:00:00
 #SBATCH --gres=gpu:1
-#SBATCH --constraint="A100"
+#SBATCH --constraint="A100|V100|P100"
 #SBATCH --mem=20G
 #SBATCH --cpus-per-task=4
 #SBATCH --job-name=JOB
